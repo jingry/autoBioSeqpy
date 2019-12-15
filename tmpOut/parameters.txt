@@ -1,0 +1,32 @@
+--useKMer None
+--batch_size 60
+--shuffleDataTrain True
+--dataTestLabel 1 0
+--dataType protein
+--dataSplitScale None
+--noGPU True
+--epochs 20
+--verbose True
+--figDPI 300
+--paraFile None
+--shuffleDataTest False
+--loss binary_crossentropy
+--modelSaveName tmpMod.json
+--paraSaveName parameters.txt
+--dataTrainLabel 1 0
+--outSaveFolderPath tmpOut
+--spcLen 100
+--optimizer optimizers.Adam()
+--weightSaveName tmpWeight.bin
+--inputLength None
+--firstKernelSize 
+--modelLoadFile examples/typeIIIsecretedeffectors/model/protein_CNN1D_model.py
+--KMerNum 3
+--weightLoadFile None
+--dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
+--showFig True
+--metrics acc
+--saveFig True
+--dataEncodingType dict
+--savePrediction True
+--dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt
