@@ -1,6 +1,3 @@
-'''
-#Train a convolutional network on protein classification task.
-'''
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten

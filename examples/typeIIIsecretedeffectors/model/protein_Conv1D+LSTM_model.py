@@ -1,9 +1,3 @@
-'''
-#Train a recurrent convolutional network on protein classification task.
-'''
-
-#from __future__ import print_function
-
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding

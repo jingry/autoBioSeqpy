@@ -1,9 +1,3 @@
-'''
-#This example demonstrates the use of Convolution1D for protein classification.
-'''
-
-#from __future__ import print_function
-
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding

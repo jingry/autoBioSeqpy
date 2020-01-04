@@ -1,8 +1,3 @@
-'''
-#Trains an LSTM model on protein classification task.
-'''
-
-
 from keras.models import Sequential
 from keras.layers import Dense, Embedding
 from keras.layers import LSTM

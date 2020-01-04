@@ -1,9 +1,3 @@
-'''
-Trains a simple convnet for DNA classification.
-(there is still a lot of margin for parameter tuning)
-'''
-
-#from __future__ import print_function
 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Activation
