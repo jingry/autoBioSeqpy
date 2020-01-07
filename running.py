@@ -21,6 +21,7 @@ import dataProcess
 import analysisPlot
 import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
+import tensorflow as tf
 
 paraDict = paraParser.parseParameters(sys.argv[1:])
 
@@ -65,6 +66,7 @@ inputLength = paraDict['inputLength']
 modelSaveName = paraDict['modelSaveName']
 weightSaveName = paraDict['weightSaveName']
 noGPU = paraDict['noGPU']
+labelToMat = paraDict['labelToMat']
 
 
 if not modelSaveName is None:
@@ -110,7 +112,10 @@ if noGPU:
     if verbose:
         print('As set by user, gpu will be disabled.')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
-
+else:
+    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+    sess = tf.Session(config=config)
+    
 if verbose:
     print('Checking the number of the train files and the labels, they should be the same')    
 assert len(dataTrainFilePaths) == len(dataTrainLabel)
@@ -155,6 +160,8 @@ if len(dataTestFilePaths) > 0:
         trainDataLoaders.append(dataLoader)
     trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
     trainDataMat, trainLabelArr = trainDataSetCreator.getDataSet(toShuffle=shuffleDataTrain)
+
+      
     
     if verbose:
         print('Begin to generate test dataset...')
@@ -179,6 +186,17 @@ else:
         trainDataLoaders.append(dataLoader)
     trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
     trainDataMat, testDataMat, trainLabelArr, testLabelArr = trainDataSetCreator.getTrainTestSet(dataSplitScale, toShuffle=shuffleDataTrain)
+
+if labelToMat:
+    if verbose:
+        print('Since labelToMat is set, the labels would be changed to matrix')
+    trainLabelArr,trainLabelArrDict,trainArrLabelDict = dataProcess.labelToMat(trainLabelArr)
+    testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArr)
+
+    
+#    print('#######################################################')
+#    print(trainLabelArr)
+#    print('#######################################################')
     
 if verbose:
     print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
@@ -280,16 +298,25 @@ if verbose:
 predicted_Probability = model.predict(testDataMat)
 prediction = model.predict_classes(testDataMat)
 
+#print('#######################################################')
+#print(predicted_Probability)
+#print(prediction)
+#print(np.sum(np.argmax(predicted_Probability,axis=1) != prediction))
+#print('#######################################################')
+
+if labelToMat:
+    testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
 
 print('Showing the confusion matrix')
 cm=confusion_matrix(testLabelArr,prediction)
 print(cm)
 print("ACC: %f "%accuracy_score(testLabelArr,prediction))
-print("F1: %f "%f1_score(testLabelArr,prediction))
-print("Recall: %f "%recall_score(testLabelArr,prediction))
-print("Pre: %f "%precision_score(testLabelArr,prediction))
-print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
-print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
+if not labelToMat:
+    print("F1: %f "%f1_score(testLabelArr,prediction))
+    print("Recall: %f "%recall_score(testLabelArr,prediction))
+    print("Pre: %f "%precision_score(testLabelArr,prediction))
+    print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
+    print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
@@ -303,7 +330,7 @@ if savePrediction:
             while len(tmpPrediction.shape) > 0:
                 tmpPrediction = tmpPrediction[0]
             tmpProbability = predicted_Probability[i]
-            tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+            tmpStr = '%r\t%r\t%r\n' %(tmpLabel,tmpPrediction,tmpProbability)
             FIDO.write(tmpStr)
     tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
     if verbose:
@@ -318,25 +345,27 @@ if savePrediction:
             FIDO.write(tmpStr)
         FIDO.write('Predicting Performance:\n')
         FIDO.write("ACC: %f \n"%accuracy_score(testLabelArr,prediction))
-        FIDO.write("F1: %f \n"%f1_score(testLabelArr,prediction))
-        FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
-        FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
-        FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
-        FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
-tmpFigSavePath = None
-if showFig:  
-    if verbose:
-        print('Plotting the ROC and PR curves...')
-if saveFig:
-    tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
-    if verbose:
-        print('Saving figure recording ROC curve at %s' %tmpFigSavePath)        
-analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
-if saveFig:
-    tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
-    if verbose:
-        print('Saving figure recording ROC curve at %s' %tmpFigSavePath)       
-    analysisPlot.plotPR(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
+        if not labelToMat:
+            FIDO.write("F1: %f \n"%f1_score(testLabelArr,prediction))
+            FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
+            FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
+            FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
+            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
+if not labelToMat:
+    tmpFigSavePath = None
+    if showFig:  
+        if verbose:
+            print('Plotting the ROC and PR curves...')
+    if saveFig:
+        tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
+        if verbose:
+            print('Saving figure recording ROC curve at %s' %tmpFigSavePath)        
+    analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
+    if saveFig:
+        tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
+        if verbose:
+            print('Saving figure recording ROC curve at %s' %tmpFigSavePath)       
+        analysisPlot.plotPR(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
 
 if not paraSaveName is None:
     tmpParaSavePath = outSaveFolderPath + os.path.sep + paraSaveName

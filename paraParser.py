@@ -173,6 +173,16 @@ options:
     --paraSaveName          String of path
                             Save used parameters into file. Sometimes saving the parameters into a file will make the model easier for prediction.
                             
+    --labelToMat            bool
+                            Default: False
+                            Change the label into matrix as follows: 
+                                [0,1,2,1,1] =>  [1,0,0]
+                                                [0,1,0]
+                                                [0,0,1]
+                                                [0,1,0]
+                                                [0,1,0]
+                            The change of the label could be useful for some kind of CNN with multilabel training.
+                            
     --verbose               bool
                             Default: False
                             See a detailed output when the script running.
@@ -215,11 +225,12 @@ def getDefaultParameters():
                 'noGPU' : False,
                 'paraFile' : None,
                 'paraSaveName' : None,
+                'labelToMat' : False,
                 'verbose' : True,
                 }
     intSet = set(['spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','figDPI','firstKernelSize'])
     numSet = set(['dataSplitScale'])
-    boolSet = set(['shuffleDataTrain','shuffleDataTest','useKMer','verbose','showFig','saveFig','savePrediction','noGPU'])
+    boolSet = set(['shuffleDataTrain','shuffleDataTest','useKMer','verbose','showFig','saveFig','savePrediction','noGPU','labelToMat'])
     objSet = set(['inputLength'])
     return paraDict, numSet, intSet, boolSet, objSet
 
