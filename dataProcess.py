@@ -583,6 +583,27 @@ class DataSetCreator():
                 testLabel = np.concatenate((testLabel,tmpTestL),axis=0).flatten()
         return trainDataMat, testDataMat, trainLabel, testLabel
 
+def matSuffleByRow(matIn, label = None, seed = 1):
+    """
+    Suffle matrix 
+        [0,1,2,1,1] =>  [1,0,0]
+                        [0,1,0]
+                        [0,0,1]
+                        [0,1,0]
+                        [0,1,0]
+    Parameters:     
+        labelIn: List, the list of the labels
+    """
+    indexArr = np.arange(len(matIn))
+    if not np.random.seed == seed:
+        np.random.seed = seed
+    np.random.shuffle(indexArr)
+    if label is None:
+        return matIn[indexArr,:]
+    else:
+        return matIn[indexArr,:],label[indexArr]
+    
+    
 def labelToMat(labelIn):
     """
     Change the label to matrix as the following:

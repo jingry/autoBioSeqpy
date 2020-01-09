@@ -182,7 +182,11 @@ options:
                                                 [0,1,0]
                                                 [0,1,0]
                             The change of the label could be useful for some kind of CNN with multilabel training.
-                            
+    
+    --seed                  int
+                            Default: 1
+                            The random seed of numpy.
+                        
     --verbose               bool
                             Default: False
                             See a detailed output when the script running.
@@ -225,10 +229,11 @@ def getDefaultParameters():
                 'noGPU' : False,
                 'paraFile' : None,
                 'paraSaveName' : None,
+                'seed' : 1,
                 'labelToMat' : False,
                 'verbose' : True,
                 }
-    intSet = set(['spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','figDPI','firstKernelSize'])
+    intSet = set(['seed','spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','figDPI','firstKernelSize'])
     numSet = set(['dataSplitScale'])
     boolSet = set(['shuffleDataTrain','shuffleDataTest','useKMer','verbose','showFig','saveFig','savePrediction','noGPU','labelToMat'])
     objSet = set(['inputLength'])
