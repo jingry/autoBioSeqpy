@@ -414,6 +414,8 @@ class DataLoader:
                         few 'X' will be added at the end.
         """
         for line in open(inpFile):
+            if line.startswith('#'):
+               continue 
             if line.startswith('>'):
                name = line.replace('>','').split()[0]
                annotation = line.strip()
