@@ -53,38 +53,24 @@ The use of parameters is in “parameters” section or in the help document gen
 Since there are too many parameters to write on the command line, an alternative way is to write the parameters to a text file, for example the file parameters.txt contains the details information (All spaces below can be changed to line breaks):
 
 ```
---useKMer None
---batch_size 60
---shuffleDataTrain True
---dataTestLabel 1 0
---dataType protein
---dataSplitScale None
---noGPU True
---epochs 20
---verbose True
---figDPI 300
---paraFile None
---shuffleDataTest False
---loss binary_crossentropy
---modelSaveName tmpMod.json
+--dataType protein 
+--dataEncodingType dict  
+--dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt 
+--dataTrainLabel 1 0 --dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt 
+--dataTestLabel 1 0 
+--modelLoadFile examples/typeIIIsecretedeffectors/model/protein_biLSTM_model.py 
+--verbose 1 
+--outSaveFolderPath tmpOut 
+--savePrediction 1 
+--saveFig 1 
+--batch_size 60 
+--epochs 20 
+--spcLen 100 
+--shuffleDataTrain 1 
+--modelSaveName tmpMod.json 
+--weightSaveName tmpWeight.bin 
+--noGPU 0 
 --paraSaveName parameters.txt
---dataTrainLabel 1 0
---outSaveFolderPath tmpOut
---spcLen 100
---optimizer optimizers.Adam()
---weightSaveName tmpWeight.bin
---inputLength None
---firstKernelSize 
---modelLoadFile examples/typeIIIsecretedeffectors/model/protein_CNN1D_model.py
---KMerNum 3
---weightLoadFile None
---dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
---showFig True
---metrics acc
---saveFig True
---dataEncodingType dict
---savePrediction True
---dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt 
 ```
 
 This file can then be used in a command line:
