@@ -37,51 +37,7 @@ class FeatureGenerator:
         self.oneHot1DDict = None
         self.word2int1DDict = None
         self.wordIndexDict = None
-#        self.oneHotSeq = 'GAVLIPFYWSTCMNQDEKRHXBJOUZ'
-#        self.oneHotIgnore = 'XBJOUZ'
-#        self.oneHot1DDict = {
-#                "G" : [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "A" : [0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "V" : [0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "L" : [0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "I" : [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "P" : [0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "F" : [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "Y" : [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "W" : [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-#                "S" : [0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
-#                "T" : [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
-#                "C" : [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-#                "M" : [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
-#                "N" : [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-#                "Q" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
-#                "D" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
-#                "E" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
-#                "K" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
-#                "R" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-#                "H" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-#                "X" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "B" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "J" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "O" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "U" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "Z" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                }
-#        self.word2int1DDict = {'G': 1, 'A': 2, 'V': 3, 'L': 4, 'I': 5, 'P': 6,
-#                               'F': 7, 'Y': 8, 'W': 9, 'S': 10, 'T': 11, 'C': 12,
-#                               'M': 13, 'N': 14, 'Q': 15, 'D': 16, 'E': 17,
-#                               'K': 18, 'R': 19, 'H': 20, 'X': 21, 'B': 22,
-#                               'J': 23, 'O': 24, 'U': 25, 'Z': 26}
-##        self.wordIndexDict = {'G': 1, 'A': 2, 'V': 3, 'L': 4, 'I': 5, 'P': 6,
-##                               'F': 7, 'Y': 8, 'W': 9, 'S': 10, 'T': 11, 'C': 12,
-##                               'M': 13, 'N': 14, 'Q': 15, 'D': 16, 'E': 17,
-##                               'K': 18, 'R': 19, 'H': 20, 'X': 21, 'B': 22,
-##                               'J': 23, 'O': 24, 'U': 25, 'Z': 26}
-#        self.wordIndexDict = {'G': 0, 'A': 1, 'V': 2, 'L': 3, 'I': 4, 'P': 5,
-#                              'F': 6, 'Y': 7, 'W': 8, 'S': 9, 'T': 10, 'C': 11,
-#                              'M': 12, 'N': 13, 'Q': 14, 'D': 15, 'E': 16,
-#                              'K': 17, 'R': 18, 'H': 19, 'X': 20, 'B': 21,
-#                              'J': 22, 'O': 23, 'U': 24, 'Z': 25}
+
     
     def setIgnoreRes(self, seqIn):
         '''
@@ -370,38 +326,7 @@ class DataLoader:
         self.annotation = {}
         self.label = label #0,1,2... or True/False
         self.featureGenerator = featureGenerator
-#        self.oneHotDict = {
-#                "G" : [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "A" : [0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "V" : [0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "L" : [0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "I" : [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "P" : [0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "F" : [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "Y" : [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "W" : [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-#                "S" : [0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
-#                "T" : [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
-#                "C" : [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-#                "M" : [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
-#                "N" : [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-#                "Q" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
-#                "D" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
-#                "E" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
-#                "K" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
-#                "R" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
-#                "H" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-#                "X" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "B" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "J" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "O" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "U" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                "Z" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-#                }
-#        self.word2intDict = {'A':1,'B':22,'U':23,'J':24,'Z':25,'O':26,'C':2,'D':3,'E':4,
-#                    'F':5,'G':6,'H':7,'I':8,'K':9,'L':10,'M':11,'N':12,'P':13,
-#                    'Q':14,'R':15,'S':16,'T':17,'V':18,'W':19,'Y':20,'X':21}
-#        print('DataLoad init...')
+
         
     def readFile(self,inpFile,spcLen):
         """
@@ -469,37 +394,6 @@ class DataLoader:
             dataMat.append(seqData)
         return np.array(dataMat).reshape(len(self.names),feaLen),label    
           
-#    def dictEncoding(self,inpStr):
-#        _res = []
-#        for inp in range(len(inpStr)):
-#            _res.append(self.word2intDict[inpStr[inp]])
-#        return _res
-#    
-#    def OnehotEncoding(self,inpStr):
-#        _res = []
-#        for base in inpStr:
-#            tmpOut = self.oneHotDict[base]
-#            _res.append(tmpOut)
-#        return _res
-
-#    def seqEncoding(self, encodingType):
-#        label = np.array([self.label]*len(self.names))
-#        dataMat = []
-#        seqLen = None
-#        num = None
-#        for name in self.names:    
-#            seq = self.seqs[name]
-#            seqLen = len(seq)
-#            if encodingType == "dict":
-#                seqData = np.array(self.dictEncoding(seq)).reshape([1,seqLen])
-#            else:
-#                num = seqLen * 20
-#                seqData = np.array(self.OnehotEncoding(seq)).reshape([1,num])
-#            dataMat.append(seqData)
-#        if encodingType == "dict":
-#            return np.array(dataMat).reshape(len(self.names),seqLen),label
-#        else:
-#            return np.array(dataMat).reshape(len(self.names),num),label
 
             
 class DataSetCreator():
@@ -649,73 +543,6 @@ def matToLabel(labelIn,arrLabelDict):
     return labelOut
 
 
-#
-#def createTrainTestData(posSample,negSample,Encodingtype):
-#    TrainTest=[]
-#    seq_len=[]
-#    num=[]
-#    pos_label = np.ones((len(posSample),1))
-#    neg_label = np.zeros((len(negSample),1))
-#    Label = np.concatenate((pos_label,neg_label),axis=0).flatten()
-#    TrainTestSample = posSample + negSample
-#
-#    if Encodingtype == "Dict":
-#       for i in TrainTestSample:
-#           seq_len=len(i)
-#           i=np.array(dictEncoding(i)).reshape([1,seq_len])
-#           TrainTest.append(i)
-#       TrainTest=np.array(TrainTest).reshape(len(TrainTestSample),seq_len)
-#       return Label, TrainTest
-#    else:
-#       for i in TrainTestSample:
-#           num = len(i) * 20
-#           i=np.array(OnehotEncoding(i)).reshape([1,num])
-#           TrainTest.append(i)
-#       TrainTest=np.array(TrainTest).reshape(len(TrainTestSample),num)    
-#       return Label, TrainTest
-#
-#           
-
-#
-#def createData(Sample,Encodingtype):
-#    Feature=[]
-#    seq_len=[]
-#    num=[]
-#    if Encodingtype == "dict":
-#       for i in Sample:
-#           seq_len=len(i)
-#           i=np.array(dictEncoding(i)).reshape([1,seq_len])
-#           Feature.append(i)
-#       Feature=np.array(Feature).reshape(len(Sample),seq_len)
-#       return Feature
-#    else:
-#       for i in Sample:
-#           num = len(i) * 20
-#           i=np.array(OnehotEncoding(i)).reshape([1,num])
-#           Feature.append(i)
-#       Feature=np.array(Feature).reshape(len(Sample),num)
-#       return Feature
-#
-#
-
-
-#test
-#inputFilePath1 = ('D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_pos.txt')
-#inputFilePath0 = ('D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_neg.txt')
-#tmpFea = ProteinFeatureGenerator('oneHot', useKMer=True)
-#positiveDL = DataLoader(label = 1, featureGenerator=tmpFea)
-#positiveDL.readFile(inputFilePath1, spcLen = 100)
-#negativeDL = DataLoader(label = 0, featureGenerator=tmpFea)
-#negativeDL.readFile(inputFilePath0, spcLen = 100)
-#dataSC = DataSetCreator((positiveDL, negativeDL))
-##trainDataMat, testDataMat, trainLabel, testLabel = dataSC.getTrainTestSet(trainScale=0.8, encodingType = 'oneHot')
-##trainDataMat, testDataMat, trainLabel, testLabel = dataSC.getTrainTestSet(trainScale=0.8, encodingType = 'dict')
-#dataMat, label = dataSC.getDataSet()
-
-
-#tmpFea = ProteinFeatureGenerator('oneHot', useKMer=True)
-#tmpSeq = positiveDL.seqs[positiveDL.names[0]]
-#tmpRes, arrLength = tmpFea.seqEncoding(tmpSeq)
 
 
   

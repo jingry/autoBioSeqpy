@@ -239,10 +239,6 @@ def getDefaultParameters():
     objSet = set(['inputLength'])
     return paraDict, numSet, intSet, boolSet, objSet
 
-#def checkParameters(dictIn):
-#    if len(dictIn['dataTestFilePaths']) > 0 and not dictIn['dataSplitScale'] is None:
-#        warnings.warn('parameter \'dataSplitScale\' will be ignored since testData is provided.', DeprecationWarning)
-    
     
 def addSingleParameter(paraDict, numSet, intSet, boolSet, objSet, tmpName, tmpVal, modifiedSet):    
     if not tmpName in paraDict:
@@ -310,14 +306,11 @@ def printParameters(dictIn):
         print(tmpStr)
         
 def saveParameters(savePath,dictIn,sep=' '):
-#    with open(savePath,'w') as FIDO:
-#        FIDO.write(str.join(sep,listIn)) 
     with open(savePath,'w') as FIDO:
         for k in dictIn:
 #            if dictIn[k] is None:
 #                continue
             tmpStr = '--' + k + sep
-#            print(dictIn[k])
             if isinstance(dictIn[k],list):
                 tmpStr += str.join(sep,map(str,dictIn[k]))
             else:

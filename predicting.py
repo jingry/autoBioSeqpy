@@ -82,12 +82,6 @@ weightSaveName = paraDict['weightSaveName']
 noGPU = paraDict['noGPU']
 
 
-#if not modelSaveName is None:
-#    if not modelSaveName.endswith('.json'):
-#        modelSaveName += '.json'
-#if not weightSaveName is None:
-#    if not weightSaveName.endswith('.bin'):
-#        weightSaveName += '.bin'
 
 modelLoadFile = outSaveFolderPath + os.path.sep + modelSaveName
 weightLoadFile = outSaveFolderPath + os.path.sep + weightSaveName
@@ -102,46 +96,12 @@ for i,k in enumerate(sys.argv):
         verbose = sys.argv[i+1]
 
 
-
-#################################################
-#for debug
-#batch_size = 40
-#epochs = 250
-
-#useKMer = False
-#KMerNum = 3
-
-#inputLength = -1
-#inputLength = None
-#dataTrainFilePaths = ['D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_pos.txt', 
-#                 'D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_neg.txt']
-#dataTrainLabel = [1,0]
-#dataTestFilePaths = ['D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\test\\test_pos.txt', 
-#                 'D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\test\\test_neg.txt']
-#dataTestLabel = [1,0]
-#modelLoadFile = 'D:\\workspace\\proteinPredictionUsingDeepLearning\\models\\LSTM.py'
-#verbose = True
-#outSaveFolderPath = 'D:\\workspace\\proteinPredictionUsingDeepLearning\\tmpOut'
-#savePrediction = True
-#saveFig = True
-################################################
-
-#if verbose:
-#    print('Parameters:')
-#    paraParser.printParameters(paraDict)
-#    print('Generating dataset...')
-#    print('Checking the number of train files, which should be larger than 1 (e.g. at least two labels)...')
-#assert len(dataTrainFilePaths) > 1
-
 if noGPU:
     if verbose:
         print('As set by user, gpu will be disabled.')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 
-#if verbose:
-#    print('Checking the number of the train files and the labels, they should be the same')    
-#assert len(dataTrainFilePaths) == len(dataTrainLabel)
-    
+
 
 if dataType is None:
     if verbose:
@@ -168,19 +128,6 @@ if verbose:
     print('test datafiles should be provided, the test dataset will be generated from the test datafiles...')
     print('Checking the number of test files, which should be larger than 1 (e.g. at least two labels)...')
 assert len(dataTestFilePaths) > 0
-#if verbose:
-#    print('Checking the number of the test files and the labels, they should be the same')  
-#assert len(dataTestFilePaths) == len(dataTestLabel)
-#if verbose:
-#    print('Begin to generate train dataset...')
-#
-#trainDataLoaders = []
-#for i,dataPath in enumerate(dataTrainFilePaths):
-#    dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
-#    dataLoader.readFile(dataPath, spcLen = spcLen)
-#    trainDataLoaders.append(dataLoader)
-#trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
-#trainDataMat, trainLabelArr = trainDataSetCreator.getDataSet(toShuffle=shuffleDataTrain)
 
 if verbose:
     print('Begin to generate test dataset...')
@@ -216,18 +163,7 @@ if weightLoadFile is None:
         print('the weight file is necessary for predicting, otherwise the model will be with initialized weight')
 assert not modelLoadFile is None
 assert not weightLoadFile is None
-#if modelLoadFile.endswith('.py'):
-#    if verbose:
-#        print('Loading module from python file')
-#        if not weightLoadFile is None:
-#            print('Weights will be loaded at the same time')
-#    model = moduleRead.getModelFromPyFile(modelLoadFile, weightFile=weightLoadFile, input_length=inputLength, loss=loss, optimizer=optimizer, metrics=metrics)
-#else:
-#    if verbose:
-#        print('Loading module from Json file')
-#        if not weightLoadFile is None:
-#            print('Weights will be loaded at the same time')
-#    model = moduleRead.getModelFromJsonFile(modelLoadFile, weightFile=weightLoadFile, input_length=inputLength, loss=loss, optimizer=optimizer, metrics=metrics)
+
 if verbose:
     print('Loading module and weight file')
 model = moduleRead.readModelFromJsonFileDirectly(modelLoadFile,weightLoadFile)
@@ -247,33 +183,6 @@ if '2D' in str(model.layers[0].__class__):
 #    trainDataMat = trainDataMat.reshape(trainDataMat.shape[0],int(trainDataMat.shape[1]/reshapeLen),reshapeLen,1)
     testDataMat = testDataMat.reshape(testDataMat.shape[0],int(testDataMat.shape[1]/reshapeLen),reshapeLen,1)
     
-#    if len(firstKernelSize) == 0:
-#        if verbose:
-#            print('Since the --firstKernelSize is not provided, program will change it into (%d,3)' %(newShape[0]))
-#        firstKernelSize = (newShape[0],3)
-#        moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
-#    else:
-#        firstKernelSize = tuple(firstKernelSize)
-#        if verbose:
-#            print('--firstKernelSize %s is provided, program will use it' %(str(firstKernelSize)))
-#        moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
-    
-
-#subLayer = model.layers[0]
-#if 'input_length' in dir(subLayer):
-#    subLayer.input_length = trainDataMat.shape[1]
-#    subLayer.batch_input_shape = (None,trainDataMat.shape[1])
-#    
-#model = model_from_json(model.to_json())
-#model.compile(loss = 'binary_crossentropy',optimizer = optimizers.Adam(),metrics = ['acc'])
-
-#if verbose:
-#    print('Start training...')
-#history = analysisPlot.LossHistory()
-#model.fit(trainDataMat, trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
-#if verbose:
-#    print('Training finished, generating the summary of the module')
-#    model.summary()
 
 if not outSaveFolderPath is None:
     if not os.path.exists(outSaveFolderPath):        
@@ -281,40 +190,10 @@ if not outSaveFolderPath is None:
     else:
         if verbose:
             print('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath)
-#if not modelSaveName is None:
-#    tmpModelOutPath = outSaveFolderPath + os.path.sep + modelSaveName
-#    tmpWeightOutPath = None
-#    if not weightSaveName is None:
-#        tmpWeightOutPath = outSaveFolderPath + os.path.sep + weightSaveName
-#    if verbose:
-#        print('\'modelSaveName\' provided, module will be saved at %s' %tmpModelOutPath)
-#        if not tmpWeightOutPath is None:
-#            print('Weights will be saved at %s' %tmpWeightOutPath)
-#    moduleRead.saveBuiltModel(model, tmpModelOutPath, weightPath=tmpWeightOutPath)
-
-#if verbose:
-#    tmpFigSavePath = None
-#    if showFig:
-#        print('Drawing figure recording loss...')    
-#    if saveFig:
-#        tmpFigSavePath = outSaveFolderPath + os.path.sep + 'epoch_loss.pdf'
-#        print('Saving figure recording loss at %s' %tmpFigSavePath)
-#    history.loss_plot('epoch',showFig=showFig,savePath=tmpFigSavePath)
-
 
 predicted_Probability = model.predict(testDataMat)
 prediction = model.predict_classes(testDataMat)
 
-
-#print('Showing the confusion matrix')
-#cm=confusion_matrix(testLabelArr,prediction)
-#print(cm)
-#print("ACC: %f "%accuracy_score(testLabelArr,prediction))
-#print("F1: %f "%f1_score(testLabelArr,prediction))
-#print("Recall: %f "%recall_score(testLabelArr,prediction))
-#print("Pre: %f "%precision_score(testLabelArr,prediction))
-#print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
-#print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
 
 if not predictionSavePath is None:
     tmpPredictSavePath = predictionSavePath
@@ -345,31 +224,5 @@ else:
         print(tmpStr)
     print('\n\n')
 
-#    tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
-#    if verbose:
-#        print('Saving confusion matrix and predicting performance at %s' %tmpPredictSavePath)
-#    with open(tmpCMPath, 'w') as FIDO:
-#        FIDO.write('Confusion Matrix:\n')
-#        for i in range(cm.shape[0]):
-#            tmpStr = ''
-#            for j in range(cm.shape[1]):
-#                tmpStr += '%d\t' %cm[i,j]
-#            tmpStr += '\n'
-#            FIDO.write(tmpStr)
-#        FIDO.write('Predicting Performance:\n')
-#        FIDO.write("ACC: %f \n"%accuracy_score(testLabelArr,prediction))
-#        FIDO.write("F1: %f \n"%f1_score(testLabelArr,prediction))
-#        FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
-#        FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
-#        FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
-#        FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
-#if verbose:
-#    tmpFigSavePath = None
-#    if showFig:        
-#        print('Plotting the ROC curve...')
-#    if saveFig:
-#        tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
-#        print('Saving figure recording ROC curve at %s' %tmpFigSavePath)
-#    analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
 
 print('Finished')

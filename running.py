@@ -81,29 +81,6 @@ if not weightSaveName is None:
 
 verbose = paraDict['verbose']
 
-#################################################
-#for debug
-#batch_size = 40
-#epochs = 250
-
-#useKMer = False
-#KMerNum = 3
-
-#inputLength = -1
-#inputLength = None
-#dataTrainFilePaths = ['D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_pos.txt', 
-#                 'D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\train\\train_neg.txt']
-#dataTrainLabel = [1,0]
-#dataTestFilePaths = ['D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\test\\test_pos.txt', 
-#                 'D:\\workspace\\proteinPredictionUsingDeepLearning\\original\\data\\test\\test_neg.txt']
-#dataTestLabel = [1,0]
-#modelLoadFile = 'D:\\workspace\\proteinPredictionUsingDeepLearning\\models\\LSTM.py'
-#verbose = True
-#outSaveFolderPath = 'D:\\workspace\\proteinPredictionUsingDeepLearning\\tmpOut'
-#savePrediction = True
-#saveFig = True
-################################################
-
 if verbose:
     print('Parameters:')
     paraParser.printParameters(paraDict)
@@ -116,8 +93,17 @@ if noGPU:
         print('As set by user, gpu will be disabled.')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 else:
-    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-    sess = tf.Session(config=config)
+    #check the version of tensorflow before configuration
+    tfVersion = tf.__version__
+    if int(tfVersion.split('.')[0]) >= 2:
+#        config = tf.compat.v1.ConfigProto(allow_growth=True)
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        sess =tf.compat.v1.Session(config=config)
+    else:
+        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+        sess = tf.Session(config=config)
     
 if verbose:
     print('Checking the number of the train files and the labels, they should be the same')    
@@ -200,9 +186,6 @@ if shuffleDataTest:
 if labelToMat:
     if verbose:
         print('Since labelToMat is set, the labels would be changed to matrix')
-#    print('#######################################################')
-#    print(trainLabelArr)
-#    print('#######################################################')
     trainLabelArr,trainLabelArrDict,trainArrLabelDict = dataProcess.labelToMat(trainLabelArr)
     testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArr)
 
@@ -212,7 +195,6 @@ if labelToMat:
 if verbose:
     print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
     print('begin to prepare model...')
-#    print('Loading keras model from .py files...')
     
 if not inputLength is None:
     if inputLength == 0:
@@ -263,19 +245,6 @@ if '2D' in str(model.layers[0].__class__):
         moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
     
 
-#subLayer = model.layers[0]
-#if 'input_length' in dir(subLayer):
-#    subLayer.input_length = trainDataMat.shape[1]
-#    subLayer.batch_input_shape = (None,trainDataMat.shape[1])
-#    
-#model = model_from_json(model.to_json())
-#model.compile(loss = 'binary_crossentropy',optimizer = optimizers.Adam(),metrics = ['acc'])
-
-#import pickle
-#with open('tmpTrain.bin', 'wb') as FIDO:
-#    pickle.dump((trainDataMat, trainLabelArr),FIDO)
-#assert False
-
 if verbose:
     print('Start training...')
 history = analysisPlot.LossHistory()
@@ -314,11 +283,6 @@ if verbose:
 predicted_Probability = model.predict(testDataMat)
 prediction = model.predict_classes(testDataMat)
 
-#print('#######################################################')
-#print(predicted_Probability)
-#print(prediction)
-#print(np.sum(np.argmax(predicted_Probability,axis=1) != prediction))
-#print('#######################################################')
 
 if labelToMat:
     testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
