@@ -34,7 +34,7 @@ import dataProcess
 #import analysisPlot
 import numpy as np
 #from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
-
+import tensorflow as tf
 paraDictCMD = paraParser.parseParameters(sys.argv[1:])
 
 paraFile = paraDictCMD['paraFile']
@@ -100,6 +100,18 @@ if noGPU:
     if verbose:
         print('As set by user, gpu will be disabled.')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+else:
+    #check the version of tensorflow before configuration
+    tfVersion = tf.__version__
+    if int(tfVersion.split('.')[0]) >= 2:
+#        config = tf.compat.v1.ConfigProto(allow_growth=True)
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
+
+        sess =tf.compat.v1.Session(config=config)
+    else:
+        config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+        sess = tf.Session(config=config)
 
 
 
@@ -207,7 +219,14 @@ if not predictionSavePath is None:
             while len(tmpPrediction.shape) > 0:
                 tmpPrediction = tmpPrediction[0]
             tmpProbability = predicted_Probability[i]
-            tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+#            tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+            if len(tmpProbability.shape) == 0:
+                tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+            else:
+                if len(tmpProbability) == 1:
+                    tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability[0])
+                else:
+                    tmpStr = '%r\t%r\t[ %s ]\n' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
             FIDO.write(tmpStr)
 else:
     if verbose:
@@ -220,7 +239,13 @@ else:
         while len(tmpPrediction.shape) > 0:
             tmpPrediction = tmpPrediction[0]
         tmpProbability = predicted_Probability[i]
-        tmpStr = '%r\t%r\t%f' %(tmpLabel,tmpPrediction,tmpProbability)
+        if len(tmpProbability.shape) == 0:
+            tmpStr = '%r\t%r\t%f' %(tmpLabel,tmpPrediction,tmpProbability)
+        else:
+            if len(tmpProbability) == 1:
+                tmpStr = '%r\t%r\t%f' %(tmpLabel,tmpPrediction,tmpProbability[0])
+            else:
+                tmpStr = '%r\t%r\t[ %s ]' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
         print(tmpStr)
     print('\n\n')
 

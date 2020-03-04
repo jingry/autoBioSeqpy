@@ -310,7 +310,14 @@ if savePrediction:
             while len(tmpPrediction.shape) > 0:
                 tmpPrediction = tmpPrediction[0]
             tmpProbability = predicted_Probability[i]
-            tmpStr = '%r\t%r\t%r\n' %(tmpLabel,tmpPrediction,tmpProbability)
+#            tmpStr = '%r\t%r\t%r\n' %(tmpLabel,tmpPrediction,tmpProbability)
+            if len(tmpProbability.shape) == 0:
+                tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+            else:
+                if len(tmpProbability) == 1:
+                    tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability[0])
+                else:
+                    tmpStr = '%r\t%r\t[ %s ]\n' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
             FIDO.write(tmpStr)
     tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
     if verbose:
