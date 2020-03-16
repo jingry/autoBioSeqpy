@@ -265,6 +265,7 @@ class ProteinFeatureGenerator(FeatureGenerator):
                               'M': 12, 'N': 13, 'Q': 14, 'D': 15, 'E': 16,
                               'K': 17, 'R': 18, 'H': 19, 'X': 20, 'B': 21,
                               'J': 22, 'O': 23, 'U': 24, 'Z': 25}
+        self.generatorType = 'Protein'
     
 class DNAFeatureGenerator(FeatureGenerator):
     '''
@@ -285,6 +286,7 @@ class DNAFeatureGenerator(FeatureGenerator):
                 }
         self.word2int1DDict = {'A':1,'G':2,'C':3,'T':4,'X':5}
         self.wordIndexDict = {'A':0,'G':1,'C':2,'T':3,'X':4}
+        self.generatorType = 'DNA'
 
 class RNAFeatureGenerator(FeatureGenerator):
     '''
@@ -305,7 +307,17 @@ class RNAFeatureGenerator(FeatureGenerator):
                 }
         self.word2int1DDict = {'A':1,'G':2,'C':3,'U':4,'X':5}
         self.wordIndexDict = {'A':0,'G':1,'C':2,'U':3,'X':4}
+        self.generatorType = 'RNA'
 
+class OtherFeatureGenerator():
+    def __init__(self, encodingType, useKMer = None, KMerNum = None):
+        """
+        The 'useKMer' and 'KMerNum' will not be used, only provided for the format of feature genrator
+        
+        This generator will not used for encoding, just used to tell DataLoader not to encode the text
+        """
+        self.generatorType = 'Other'
+        
 class DataLoader:
     """
     For loading data    
