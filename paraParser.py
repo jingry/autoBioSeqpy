@@ -41,7 +41,7 @@ options:
                             No default value, should be provided by user
                             The type of the data, should be protein, dna or rna (upper case is supported either)
                             
-    --dataEncodingType      {onehot, dict} 
+    --dataEncodingType      list of {onehot, dict} 
                             Default: Dict
                             the type for encoding the data, if dict choosed, a character (e.g. A/G/C/T for DNA) is represented as a number (such as A:1 T:2 C:3 T:4), and if onehot choosed, a character will be represented as an array (such as A:[1,0,0,0] G:[0,1,0,0] C:[0,0,1,0] T[0,0,0,1])         
                             
@@ -58,6 +58,12 @@ options:
                             No default value, should be provided by user
                             The label of each file, and the length should be the same as --dataTrainFilePaths. As the example above, two FASTA file provided, so the label could be:
                                 --dataTrainLabel 1 0
+                        
+    --dataTrainModelInd     list of int
+                            No default value, should be provided by user
+                            The index for the model of each file, and the length should be the same as --dataTrainFilePaths, and the values should be not larger than --modelLoadFile. As the example, if three FASTA files and two models (model_0, model_1 for example) provided, so the index could be:
+                                --dataTrainModelInd 1 1 0
+                            Here the '1 1 0' means the first two data will be train by model_1 and the 3rd model will be trained by model_0
                             
     --dataTestFilePaths     list of paths
                             No default value
@@ -69,7 +75,11 @@ options:
                             No default value
                             Conflicting: --dataSplitScale
                             The format is the same as --dataTrainLabel but for the test data. The length should be the same as --dataTestFilePaths
-                            
+    
+    --dataTestModelInd      list of int
+                            No default value, should be provided by user
+                            The index for the model of each test file if provided. The other explainations are the same with --dataTrainModelInd
+                        
     --outSaveFolderPath     string
                             No default value
                             A folder path for saving the outputs, if not provide, only STDOUT will be generated.
@@ -96,7 +106,7 @@ options:
                             A scale for spliting the training data into two piece, one is for training and the other for independent test.
                             For example, if the '--dataTestLabel' is 0.8, then the training data-set is 80% and the test data-set is 20% from the provided data.
                             
-    --modelLoadFile         string of path
+    --modelLoadFile         list of paths
                             No default value
                             Load the Keras model for modeling. Both user made model (in .py file) and keras model (in .json file) are supported. Few templates in python script (e.g. .py file) are provided in folder 'models'.
                             
@@ -198,29 +208,31 @@ def showHelpDoc():
     print(helpText)
     
 def getDefaultParameters():
-    paraDict = {'dataType' : None,
-                'dataEncodingType' : 'dict',
-                'spcLen' : 100,
+    paraDict = {'dataType' : [],
+                'dataEncodingType' : [],
+                'spcLen' : [],
                 'firstKernelSize' : [],
                 'dataTrainFilePaths' : [],
                 'dataTrainLabel' : [],
                 'dataTestFilePaths' : [],
                 'dataTestLabel' : [],
+                'dataTrainModelInd' : [],
+                'dataTestModelInd' : [],
                 'outSaveFolderPath' : None,
                 'showFig' : True,
                 'saveFig' : True,
                 'figDPI' : 300,
                 'savePrediction' : True,
                 'dataSplitScale' : None,
-                'modelLoadFile' : None,
-                'weightLoadFile' : None,
+                'modelLoadFile' : [],
+                'weightLoadFile' : [],
                 'shuffleDataTrain' : True,
                 'shuffleDataTest' : False,
                 'batch_size' : 40,
                 'epochs' : 100,
-                'useKMer' : None,
-                'KMerNum' : 3,
-                'inputLength' : None,
+                'useKMer' : [],
+                'KMerNum' : [],
+                'inputLength' : [],
                 'loss' : 'binary_crossentropy',
                 'optimizer' : 'optimizers.Adam()',
                 'metrics' : ['acc'],
@@ -233,7 +245,8 @@ def getDefaultParameters():
                 'labelToMat' : False,
                 'verbose' : True,
                 }
-    intSet = set(['seed','spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','figDPI','firstKernelSize'])
+    #'firstKernelSize' were exclued from intSet
+    intSet = set(['seed','spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','dataTrainModelInd','dataTestModelInd','figDPI'])
     numSet = set(['dataSplitScale'])
     boolSet = set(['shuffleDataTrain','shuffleDataTest','useKMer','verbose','showFig','saveFig','savePrediction','noGPU','labelToMat'])
     objSet = set(['inputLength'])

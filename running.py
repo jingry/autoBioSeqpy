@@ -7,6 +7,20 @@ Created on Mon May 20 21:06:26 2019
 processing the modeling 
 """
 
+'''
+rest
+new flag for checking the parameters
+
+dataloader for different model index
+function for model merge
+for predicting
+Kmer 
+check the labels, should be the same
+label to mat
+the input shape of the first layer (or change the function of reshape)
+
+'''
+
 import os, sys, re
 sys.path.append(os.path.curdir)
 sys.path.append(sys.argv[0])
@@ -31,15 +45,33 @@ if not paraFile is None:
 
 
 #parameters
-dataType = paraDict['dataType']
+dataTypeList = paraDict['dataType']
 dataEncodingType = paraDict['dataEncodingType']
-spcLen = paraDict['spcLen']
+
 firstKernelSize = paraDict['firstKernelSize']
+print('debug0',firstKernelSize)
+tmp = ','.join(firstKernelSize)
+print('debug1',tmp)
+if len(tmp) > 0:
+    firstKernelSizes = eval(tmp)
+else:
+    firstKernelSizes = []
 dataTrainFilePaths = paraDict['dataTrainFilePaths']
 dataTrainLabel = paraDict['dataTrainLabel']
 dataTestFilePaths = paraDict['dataTestFilePaths']
 dataTestLabel = paraDict['dataTestLabel']
 modelLoadFile = paraDict['modelLoadFile']
+dataTrainModelInd = paraDict['dataTrainModelInd']
+if len(modelLoadFile) == 1:
+    dataTrainModelInd = [0] * len(dataTrainFilePaths)
+dataTestModelInd = paraDict['dataTestModelInd']
+if len(modelLoadFile) == 1:
+    dataTestModelInd = [0] * len(dataTestFilePaths)
+    
+spcLen = paraDict['spcLen']
+if len(spcLen) < 1:
+    spcLen = [100] * len(modelLoadFile)
+    
 weightLoadFile = paraDict['weightLoadFile']
 dataSplitScale = paraDict['dataSplitScale']
 outSaveFolderPath = paraDict['outSaveFolderPath']
@@ -60,8 +92,12 @@ shuffleDataTrain = paraDict['shuffleDataTrain']
 shuffleDataTest = paraDict['shuffleDataTest']
 batch_size = paraDict['batch_size']
 epochs = paraDict['epochs']
-useKMer = paraDict['useKMer']
-KMerNum = paraDict['KMerNum']
+useKMerList = paraDict['useKMer']
+if len(useKMerList ) == 0:
+    useKMerList = [False] * len(modelLoadFile)
+KMerNumList = paraDict['KMerNum']
+if len(KMerNumList ) == 0:
+    KMerNumList = [3] * len(modelLoadFile)
 inputLength = paraDict['inputLength']
 modelSaveName = paraDict['modelSaveName']
 weightSaveName = paraDict['weightSaveName']
@@ -110,26 +146,33 @@ if verbose:
 assert len(dataTrainFilePaths) == len(dataTrainLabel)
     
 
-if dataType is None:
+if not len(dataTypeList) == len(modelLoadFile):
     if verbose:
-        print('NO data type provided, please provide a data type suce as \'protein\', \'dna\' or\'rna\'')
-assert not dataType is None
+        print('Please provide enough data type as the number of --modelLoadFile')
+assert len(dataTypeList) == len(modelLoadFile)
 
-if dataType.lower() == 'protein':
-    if verbose:
-        print('Enconding protein data...')
-    featureGenerator = dataProcess.ProteinFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-elif dataType.lower() == 'dna':
-    if verbose:
-        print('Enconding DNA data...')
-    featureGenerator = dataProcess.DNAFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-elif dataType.lower() == 'rna':
-    if verbose:
-        print('Enconding RNA data...')
-    featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-else:
-    print('Unknow dataType %r, please use \'protein\', \'dna\' or\'rna\'' %dataType)
-assert dataType.lower() in ['protein','dna','rna']
+featureGenerators = []
+for i,subDataType in enumerate(dataTypeList):
+    if subDataType.lower() == 'protein':
+        if verbose:
+            print('Enconding protein data...')
+        featureGenerator = dataProcess.ProteinFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+    elif subDataType.lower() == 'dna':
+        if verbose:
+            print('Enconding DNA data...')
+        featureGenerator = dataProcess.DNAFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+    elif subDataType.lower() == 'rna':
+        if verbose:
+            print('Enconding RNA data...')
+        featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+    elif subDataType.lower() == 'other':
+        if verbose:
+            print('Reading data in CSV format...')
+        featureGenerator = dataProcess.OtherFeatureGenerator()
+    else:
+        print('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType)
+    featureGenerators.append(featureGenerator)
+    assert subDataType.lower() in ['protein','dna','rna','other']
 
 if len(dataTestFilePaths) > 0:
     if verbose:
@@ -142,58 +185,136 @@ if len(dataTestFilePaths) > 0:
     if verbose:
         print('Begin to generate train dataset...')
     
-    trainDataLoaders = []
+    trainDataLoadDict = {}
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoadDict[modelIndex] = []
+#    trainDataLoaders = []
     for i,dataPath in enumerate(dataTrainFilePaths):
+        modelIndex = dataTrainModelInd[i]
+        featureGenerator = featureGenerators[modelIndex]
         dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
-        dataLoader.readFile(dataPath, spcLen = spcLen)
-        trainDataLoaders.append(dataLoader)
-    trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
-    trainDataMat, trainLabelArr = trainDataSetCreator.getDataSet(toShuffle=shuffleDataTrain, seed=seed)
-
+        dataLoader.readFile(dataPath, spcLen = spcLen[modelIndex])
+        trainDataLoadDict[modelIndex].append(dataLoader)
+    
+    trainDataMats = []
+    trainLabelArrs = []
+    trainNameLists = []
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoaders = trainDataLoadDict[modelIndex]
+        trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
+        trainDataMat, trainLabelArr, nameList = trainDataSetCreator.getDataSet(toShuffle=False, seed=seed, withNameList=True)
+        trainDataMats.append(trainDataMat)
+        trainLabelArrs.append(trainLabelArr)
+        trainNameLists.append(nameList)
       
     
     if verbose:
         print('Begin to generate test dataset...')
-        
-    testDataLoaders = []
+    
+    testDataLoadDict = {}    
+    for modelIndex in range(len(modelLoadFile)):
+        testDataLoadDict[modelIndex] = []
+#    testDataLoaders = []
     for i,dataPath in enumerate(dataTestFilePaths):
+        modelIndex = dataTestModelInd[i]
+        featureGenerator = featureGenerators[modelIndex]
         dataLoader = dataProcess.DataLoader(label = dataTestLabel[i], featureGenerator=featureGenerator)
-        dataLoader.readFile(dataPath, spcLen = spcLen)
-        testDataLoaders.append(dataLoader)
-    testDataSetCreator = dataProcess.DataSetCreator(testDataLoaders)
-    testDataMat, testLabelArr = testDataSetCreator.getDataSet(toShuffle=shuffleDataTest, seed=seed)
+        dataLoader.readFile(dataPath, spcLen = spcLen[modelIndex])
+        testDataLoadDict[modelIndex].append(dataLoader)
+    
+    testDataMats = []
+    testLabelArrs = []
+    testNameLists = []
+    for modelIndex in range(len(modelLoadFile)):
+        testDataLoaders = testDataLoadDict[modelIndex]
+        testDataSetCreator = dataProcess.DataSetCreator(testDataLoaders)
+        testDataMat, testLabelArr, nameList = testDataSetCreator.getDataSet(toShuffle=False, seed=seed, withNameList=True)
+        testDataMats.append(testDataMat)
+        testLabelArrs.append(testLabelArr)
+        testNameLists.append(nameList)
 else:
     if verbose:
         print('No test datafiles provided, the test dataset will be generated by spliting the train datafiles...')
         print('Checking if the scale for spliting provided...')
         assert not dataSplitScale is None
         print('Generating the train and test datasets')
-    trainDataLoaders = []
+    
+    trainDataLoadDict = {}
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoadDict[modelIndex] = []
+#    trainDataLoaders = []
     for i,dataPath in enumerate(dataTrainFilePaths):
+        modelIndex = dataTrainModelInd[i]
+        featureGenerator = featureGenerators[modelIndex]
         dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
-        dataLoader.readFile(dataPath, spcLen = spcLen)
-        trainDataLoaders.append(dataLoader)
-    trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
-    trainDataMat, testDataMat, trainLabelArr, testLabelArr = trainDataSetCreator.getTrainTestSet(dataSplitScale, toShuffle=shuffleDataTrain, seed=seed)
+        dataLoader.readFile(dataPath, spcLen = spcLen[modelIndex])
+        trainDataLoadDict[modelIndex].append(dataLoader)
+        
+    trainDataMats = []
+    trainLabelArrs = []
+    trainNameLists = []
+    testDataMats = []
+    testLabelArrs = []
+    testNameLists = []
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoaders = trainDataLoadDict[modelIndex]
+        trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
+        trainDataMat, testDataMat, trainLabel, testLabel, namesTrain, namesTest = trainDataSetCreator.getTrainTestSet(dataSplitScale, toShuffle=False, seed=seed, withNameList=True)
+        trainDataMats.append(trainDataMat)
+        trainLabelArrs.append(trainLabel)
+        trainNameLists.append(namesTrain)
+        testDataMats.append(testDataMat)
+        testLabelArrs.append(testLabel)
+        testNameLists.append(namesTest)
+    
+    
+#    trainDataLoaders = []
+#    for i,dataPath in enumerate(dataTrainFilePaths):
+#        dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
+#        dataLoader.readFile(dataPath, spcLen = spcLen)
+#        trainDataLoaders.append(dataLoader)
+#    trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
+#    trainDataMat, testDataMat, trainLabelArr, testLabelArr = trainDataSetCreator.getTrainTestSet(dataSplitScale, toShuffle=shuffleDataTrain, seed=seed)
 
 if shuffleDataTrain:
-    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
+    nameTemp = trainNameLists[0]
+    np.random.seed = seed
+    np.random.shuffle(nameTemp)
+    trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
+#    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
     
 if shuffleDataTest:
-    testDataMat, testLabelArr = dataProcess.matSuffleByRow(testDataMat, testLabelArr)
-    
+    nameTemp = testNameLists[0]
+    np.random.seed = seed
+    np.random.shuffle(nameTemp)
+    testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMat,nameTemp,testLabelArr,trainNameLists)
+
+#    testDataMat, testLabelArr = dataProcess.matSuffleByRow(testDataMat, testLabelArr)
+
+tmpTempLabel = trainLabelArrs[0]
+for tmpLabel in trainLabelArrs:
+    assert np.sum(np.array(tmpTempLabel) - np.array(tmpLabel)) == 0
+
+tmpTempLabel = testLabelArrs[0]
+for tmpLabel in testLabelArrs:
+    assert np.sum(np.array(tmpTempLabel) - np.array(tmpLabel)) == 0
     
 if labelToMat:
     if verbose:
         print('Since labelToMat is set, the labels would be changed to matrix')
-    trainLabelArr,trainLabelArrDict,trainArrLabelDict = dataProcess.labelToMat(trainLabelArr)
-    testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArr)
-
+    trainLabelArr,trainLabelArrDict,trainArrLabelDict = dataProcess.labelToMat(trainLabelArrs[0])
+    testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArrs[0])
+else:
+    trainLabelArr = trainLabelArrs[0]
+    testLabelArr = testLabelArrs[0]
     
 
     
 if verbose:
-    print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
+    print('Datasets generated')
+    for i,trainDataMat in enumerate(trainDataMats):
+        testDataMat = testDataMats[i]
+        print('The %dth scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(i,trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
     print('begin to prepare model...')
     
 if not inputLength is None:
@@ -204,51 +325,86 @@ if not inputLength is None:
 
 if verbose:
     print('Checking module file for modeling')
-if modelLoadFile is None:
+if len(modelLoadFile) < 1:
     if verbose:
         print('please provide a model file in a python script or a json file. You can find some examples in the \'model\' folder')
-assert not modelLoadFile is None
-if modelLoadFile.endswith('.py'):
-    if verbose:
-        print('Loading module from python file')
-        if not weightLoadFile is None:
-            print('Weights will be loaded at the same time')
-    model = moduleRead.getModelFromPyFile(modelLoadFile, weightFile=weightLoadFile, input_length=inputLength, loss=loss, optimizer=optimizer, metrics=metrics)
-else:
-    if verbose:
-        print('Loading module from Json file')
-        if not weightLoadFile is None:
-            print('Weights will be loaded at the same time')
-    model = moduleRead.getModelFromJsonFile(modelLoadFile, weightFile=weightLoadFile, input_length=inputLength, loss=loss, optimizer=optimizer, metrics=metrics)
+assert not len(modelLoadFile) < 1
 
-if '2D' in str(model.layers[0].__class__):
-    if verbose:
-        print('2D layer detected, data will be reshaped accroding to the \'spcLen\'')    
-    if useKMer:
-        reshapeLen = spcLen - KMerNum + 1
-    else:            
-        reshapeLen = spcLen 
-    #newShape = (int(trainDataMat.shape[1]/spcLen),spcLen)
-    newShape = (int(trainDataMat.shape[1]/reshapeLen),reshapeLen)
-    trainDataMat = trainDataMat.reshape(trainDataMat.shape[0],int(trainDataMat.shape[1]/reshapeLen),reshapeLen,1)
-    testDataMat = testDataMat.reshape(testDataMat.shape[0],int(testDataMat.shape[1]/reshapeLen),reshapeLen,1)
-    
-    if len(firstKernelSize) == 0:
-        if verbose:
-            print('Since the --firstKernelSize is not provided, program will change it into (%d,3)' %(newShape[0]))
-        firstKernelSize = (newShape[0],3)
-        moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
+models = []
+for i,subModelFile in enumerate(modelLoadFile):
+    weightFile = None
+    if len(weightLoadFile) > 1:
+        weightFile = weightLoadFile[i]
+    if subModelFile.endswith('.py'):
+        model = moduleRead.readModelFromPyFileDirectly(subModelFile,weightFile=weightFile)
     else:
-        firstKernelSize = tuple(firstKernelSize)
+        model = moduleRead.readModelFromJsonFileDirectly(subModelFile,weightFile=weightFile)
+    models.append(model)
+
+#input_length
+if len(inputLength) < 1:
+    inputLength = []
+    for i,trainDataMat in enumerate( trainDataMats ):
+        inputLength.append(trainDataMat.shape[1])        
+moduleRead.modifyInputLengths(models,inputLength)
+
+
+
+'''
+#reshape and change first kernel size
+for i,model in enumerate(models):
+    subSpcLen = spcLen[i]
+    if '2D' in str(model.layers[0].__class__):
+        useKMer = useKMerList[i]
+        if useKMer:
+            KMerNum = KMerNumList[i]
+            reshapeLen = subSpcLen - KMerNum + 1
+        else:            
+            reshapeLen = subSpcLen
+        trainDataMat = trainDataMats[i]
+        testDataMat = testDataMats[i]
+        newShape = (int(trainDataMat.shape[1]/reshapeLen),reshapeLen)
+        trainDataMats[i] = trainDataMat.reshape(trainDataMat.shape[0],int(trainDataMat.shape[1]/reshapeLen),reshapeLen,1)
+        testDataMats[i] = testDataMat.reshape(testDataMat.shape[0],int(testDataMat.shape[1]/reshapeLen),reshapeLen,1)
+
+    if len(firstKernelSizes) == 0:
+        if verbose:
+            print('Since the --firstKernelSizes is not provided, program will change it into (%d,3)' %(newShape[0]))
+        firstKernelSize = (newShape[0],3)
+        moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
+    else:
+        firstKernelSize = tuple(firstKernelSizes[i])
         if verbose:
             print('--firstKernelSize %s is provided, program will use it' %(str(firstKernelSize)))
-        moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
-    
+        moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
+'''
+#first kernel size
+if len(firstKernelSizes) > 0:
+    for i,model in enumerate(models):
+        firstKernelSize = tuple(firstKernelSizes[i])
+        if verbose:
+            print('--firstKernelSize %s is provided, program will use it' %(str(firstKernelSize)))
+        moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
+
+#merge model
+if len(modelLoadFile) > 1:
+    try:
+        model = moduleRead.modelMerge(models)
+    except:
+        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats, reshapeSize=None, verbose=verbose)
+else:
+    model = models[0]
+
+moduleRead.modelCompile(model,loss = loss,optimizer = optimizer,metrics = metrics)
 
 if verbose:
     print('Start training...')
+#print(len(trainDataMats))
 history = analysisPlot.LossHistory()
-model.fit(trainDataMat, trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
+if len(trainDataMats) == 1:
+    model.fit(trainDataMats[0], trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
+else:
+    model.fit(trainDataMats, trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
 if verbose:
     print('Training finished, generating the summary of the module')
     model.summary()
@@ -280,13 +436,17 @@ if verbose:
     history.loss_plot('epoch',showFig=showFig,savePath=tmpFigSavePath)
 
 
-predicted_Probability = model.predict(testDataMat)
-prediction = model.predict_classes(testDataMat)
+predicted_Probability = model.predict(testDataMats)
+if not 'predict_classes' in dir(model):
+    prediction = np.rint(predicted_Probability)
+else:
+    prediction = model.predict_classes(testDataMats)
 
 
 if labelToMat:
     testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
-
+else:
+    testLabelArr = testLabelArrs[0]
 print('Showing the confusion matrix')
 cm=confusion_matrix(testLabelArr,prediction)
 print(cm)

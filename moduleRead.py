@@ -12,7 +12,8 @@ import sys,os,re
 #import keras.callbacks
 from keras import optimizers
 from keras.models import model_from_json
-
+import keras
+import numpy as np
         
 def getModelFromPyFile(pyFilePath, weightFile = None, input_length = None, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc'], verbose=False):
     '''
@@ -95,22 +96,32 @@ def getModelFromJsonFile(jsonFile,weightFile = None, input_length = None, loss =
         model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
     except:
         if verbose:
-            print('Compling fialed, cleaning the weight for recompiling')
+            print('Compling failed, cleaning the weight for recompiling')
         model = model_from_json(model.to_json())
         model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
 #    model.compile()
 #    model.summary()
     return model
 
-def readModelFromJsonFileDirectly(jsonFile,weightFile):
+def readModelFromJsonFileDirectly(jsonFile,weightFile=None):
     json_file = open(jsonFile, 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
-    # load weights into new model
-    loaded_model.load_weights(weightFile)
+    if not weightFile is None:
+        # load weights into new model
+        loaded_model.load_weights(weightFile)
     return loaded_model
 
+def readModelFromPyFileDirectly(pyFilePath, weightFile=None):
+    (folderPath, fileName) = os.path.split(pyFilePath)
+    moduleName = re.sub('\.[^\.]+$','',fileName)
+    sys.path.append(folderPath)
+    obj=importlib.import_module(moduleName)
+    model = obj.model
+    if not weightFile is None:
+        model.load_weights(weightFile)
+    return model
 
 def modifyModelFirstKernelSize(model, firstKernelSize, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc']):
     '''
@@ -139,3 +150,115 @@ def saveBuiltModel(model, savePath, weightPath = None):
     if not weightPath is None:
         model.save_weights(weightPath)
     print("Saved model to disk")
+
+def modelMerge(models,activation='sigmoid'):
+    outputs = []
+    inputs = []
+    for model in models:
+        outputs.append(model.output)
+        inputs.append(model.input)
+    concatenated = keras.layers.concatenate(outputs)
+    out = keras.layers.Dense(1,activation=activation)(concatenated)    
+    modelOut = keras.models.Model(inputs=inputs,outputs=out)
+    return modelOut
+
+def getPrimeFactor(intIn):
+    '''
+    Algorism is referring from:
+    https://www.geeksforgeeks.org/print-all-prime-factors-of-a-given-number/
+    '''
+    n = int(intIn)
+    symbol = 1
+    if n < 0:
+        symbol = -1
+        n = np.abs(n)
+    outList = []  
+    # Print the number of two's that divide n 
+    while n % 2 == 0: 
+        outList.append(2)
+        n = n / 2
+          
+    # n must be odd at this point 
+    # so a skip of 2 ( i = i + 2) can be used 
+    for i in range(3,int(np.sqrt(n))+1,2): 
+          
+        # while i divides n , print i ad divide n 
+        while n % i== 0: 
+            outList.append(i) 
+            n = n / i 
+              
+    # Condition if n is a prime 
+    # number greater than 2 
+    if n > 2: 
+        outList.append(n) 
+    return np.sort(outList),symbol
+        
+def modelMergeByAddReshapLayer(models, dataMats, activation='sigmoid', reshapeSize=None, verbose=False):
+    outputs = [] * len(models)
+    inputs = [] * len(models)
+    for i,model in enumerate(models):
+        if 'input_length' in dir(model.layers[0]):
+            model.layers[0].input_length = dataMats[i].shape[1]
+        try:
+            outputs[i] = model.output
+            inputs[i] = model.input
+        except:
+            subLayer = model.layers[0]
+            baseShape = subLayer.input_shape
+            dataFeaLength = dataMats[i].shape[1]
+            primeFactors,symbol = getPrimeFactor(dataFeaLength)
+            #start from the 2nd dimention since the 1st is None set by keras
+            assert dataFeaLength > np.prod(baseShape[1:])
+            if reshapeSize is None:
+                tmpShape = []
+                for j in range(1,len(baseShape)):
+                    baseNum = baseShape[j]
+                    if  baseNum == 1:
+                        tmpShape.append(1)
+                    else:
+                        tmpNum = 1
+                        while tmpNum < baseNum:
+                            assert len(primeFactors) > 0
+                            tmpNum *= primeFactors.pop(0)
+                if len(primeFactors) > 0:
+                    tmpShape[0] *= np.prod(primeFactors)
+                if verbose:
+                    print('New shape generated: ',tmpShape)
+                newModel = keras.models.Sequential()    
+            else:
+                tmpShape = reshapeSize[i]
+            newModel.add(keras.layers.Reshape(tuple(tmpShape), input_shape=(dataFeaLength,)))
+            outputs[i] = newModel.output
+            inputs[i] = newModel.input
+    #    concatenate the neural network by dense    
+    concatenated = keras.layers.concatenate(outputs)
+    out = keras.layers.Dense(1,activation=activation)(concatenated)    
+    modelOut = keras.models.Model(inputs=inputs,outputs=out)
+    return modelOut
+
+def modifyInputLengths(models,inputLengths,layerNum=0):
+    for i,model in enumerate(models):
+        input_length = inputLengths[i]
+        subLayer = model.layers[layerNum]
+        if not input_length is None:
+            if 'input_length' in dir(subLayer):
+                subLayer.input_length = input_length
+                subLayer.batch_input_shape = (None,input_length)
+                
+def modifyFirstKenelSizes(models,firstKernelSizes):
+    for i,model in enumerate(models):
+        firstKernelSize = firstKernelSizes[i]
+        for subLayer in model.layers:
+            if 'kernel_size' in dir(subLayer):
+                subLayer.kernel_size = firstKernelSize
+                break
+            
+def modifyFirstKenelSizeDirectly(model,firstKernelSize):
+    for subLayer in model.layers:
+        if 'kernel_size' in dir(subLayer):
+            subLayer.kernel_size = firstKernelSize
+            break
+        
+def modelCompile(model, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc']):
+    model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
+#    return model

@@ -1,26 +1,28 @@
---dataType protein
---dataEncodingType dict
---spcLen 100
---firstKernelSize 
---dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
---dataTrainLabel 1 0
---dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt
---dataTestLabel 1 0
+--dataType dna dna
+--dataEncodingType onehot
+--spcLen 30 30
+--firstKernelSize [[4 5] [4 5]]
+--dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
+--dataTrainLabel 1 0 1 0
+--dataTestFilePaths 
+--dataTestLabel 
+--dataTrainModelInd 0 0 1 1
+--dataTestModelInd 
 --outSaveFolderPath tmpOut
 --showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale None
---modelLoadFile examples/typeIIIsecretedeffectors/model/protein_biLSTM_model.py
---weightLoadFile None
+--dataSplitScale 0.8
+--modelLoadFile examples/CRISPRCas9guideefficiency/model/tmp2D.py examples/CRISPRCas9guideefficiency/model/tmp2D2mer.py
+--weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 60
---epochs 20
---useKMer None
---KMerNum 3
---inputLength None
+--batch_size 25
+--epochs 40
+--useKMer False True
+--KMerNum 0 2
+--inputLength 
 --loss binary_crossentropy
 --optimizer optimizers.Adam()
 --metrics acc

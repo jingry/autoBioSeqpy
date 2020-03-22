@@ -310,7 +310,7 @@ class RNAFeatureGenerator(FeatureGenerator):
         self.generatorType = 'RNA'
 
 class OtherFeatureGenerator():
-    def __init__(self, encodingType, useKMer = None, KMerNum = None):
+    def __init__(self, encodingType=None, useKMer = None, KMerNum = None):
         """
         The 'useKMer' and 'KMerNum' will not be used, only provided for the format of feature genrator
         
@@ -338,9 +338,10 @@ class DataLoader:
         self.annotation = {}
         self.label = label #0,1,2... or True/False
         self.featureGenerator = featureGenerator
+        self.arrDict = {} #{name:dataArr}
 
         
-    def readFile(self,inpFile,spcLen):
+    def readFastaFile(self,inpFile,spcLen):
         """
         Read a FASTA file and store the sequences
         
@@ -367,7 +368,30 @@ class DataLoader:
                self.seqs[name] = self.seqs[name] + "X" * (spcLen - len(self.seqs[name]))
             else:
                self.seqs[name] = self.seqs[name][0:spcLen]
-           
+               
+   
+    def readMatFile(self,inpFile,sep=','):
+        """
+        Read a Matrix file and return a dict
+        
+        Parameters:
+                inpFile: string of the file name
+        """
+        for line in open(inpFile):
+            if line.startswith('#'):
+               continue 
+            eles = line.strip().split(sep)
+            name = eles[0]
+            dataArr = np.array(eles[1:],dtype=float)
+            self.names.append(name)
+            self.arrDict[name] = dataArr
+    
+    def readFile(self,inpFile,**kwargs):
+        if self.featureGenerator.generatorType == 'Other':
+            self.readMatFile(inpFile,**kwargs)
+        else:
+            self.readFastaFile(inpFile,**kwargs)
+            
     def shuffle(self,seed=1):
         """
         shuffle the sort of different sequences.
@@ -406,8 +430,20 @@ class DataLoader:
             dataMat.append(seqData)
         return np.array(dataMat).reshape(len(self.names),feaLen),label    
           
-
-            
+    def matGenerate(self):
+        label = np.array([self.label]*len(self.names))
+        dataMat = []
+        for name in self.names:
+            dataArr = self.arrDict[name]
+            dataMat.append(dataArr)
+        return np.array(dataMat),label 
+    
+    def returnDataMat(self):
+        if not self.featureGenerator.generatorType == 'Other':
+            return self.seqEncoding()
+        else:
+            return self.matGenerate()
+        
 class DataSetCreator():
     """
     Create dataset by using multiple dataLoader
@@ -432,29 +468,47 @@ class DataSetCreator():
         for DL in self.dataLoaders:
             DL.shuffle(seed=seed)
     
-    def getDataSet(self, toShuffle=True, seed=1):
+    def getDataSet(self, toShuffle=True, seed=1, withNameList = False):
         """
         Get the datasets without spliting, outputs are the datamat (seqs x residues) and the labels respectively.
         
         Parameters:
             toShuffle: bool, shuffle the rows (seqs) of the datamat
-            seed: the seed of the random generator.
+            seed: int, the seed of the random generator.
+            withNameList: bool, return the list of names. This parameter is for aligning the samples from different DataSetCreator
         """
         dataMat = None
         label = None
+        names = []
         if toShuffle:
             self.shuffle(seed=seed)
         for DL in self.dataLoaders:
-           tmpDataMat, tmpLabel = DL.seqEncoding()
-           if dataMat is None:
-               dataMat = tmpDataMat
-               label = tmpLabel
-           else:
-               dataMat = np.r_[dataMat,tmpDataMat]
-               label = np.concatenate((label,tmpLabel),axis=0).flatten()
-        return dataMat, label
+            if withNameList:
+                names += DL.names
+#           tmpDataMat, tmpLabel = DL.seqEncoding()
+            tmpDataMat, tmpLabel = DL.returnDataMat()
+            if dataMat is None:
+                dataMat = tmpDataMat
+                label = tmpLabel
+            else:
+                dataMat = np.r_[dataMat,tmpDataMat]
+                label = np.concatenate((label,tmpLabel),axis=0).flatten()
+
+        if withNameList:
+            return dataMat, label, names
+        else:
+            return dataMat, label
+    
+    def getNameList(self):
+        '''
+        Abandon
+        '''
+        names = []
+        for DL in self.dataLoaders:
+            names += DL.names
+        return names
         
-    def getTrainTestSet(self, trainScale, toShuffle=True, seed=1):
+    def getTrainTestSet(self, trainScale, toShuffle=True, seed=1, withNameList=False):
         """
         Get the datasets with spliting, outputs are the datamat (seqs x residues) and the labels respectively.
         This function is used for generating the training and testing dataset when user didn't provide previously.
@@ -470,10 +524,13 @@ class DataSetCreator():
         testDataMat = None
         trainLabel = None
         testLabel = None
+        namesTrain = []
+        namesTest = []
         if toShuffle:
             self.shuffle(seed=seed)
         for DL in self.dataLoaders:
-            tmpDataMat, tmpLabel = DL.seqEncoding()
+#            tmpDataMat, tmpLabel = DL.seqEncoding()
+            tmpDataMat, tmpLabel = DL.returnDataMat()
             sampleNum = tmpDataMat.shape[0]
             tmpTrain = tmpDataMat[:int(sampleNum*trainScale),:]
             tmpTest = tmpDataMat[int(sampleNum*trainScale):,:]
@@ -489,6 +546,11 @@ class DataSetCreator():
                 testDataMat = np.r_[testDataMat,tmpTest]
                 trainLabel = np.concatenate((trainLabel,tmpTrainL),axis=0).flatten()
                 testLabel = np.concatenate((testLabel,tmpTestL),axis=0).flatten()
+            if withNameList:
+                namesTrain += DL.names[:int(sampleNum*trainScale)]
+                namesTest += DL.names[int(sampleNum*trainScale):]
+        if withNameList:
+            return trainDataMat, testDataMat, trainLabel, testLabel, namesTrain, namesTest
         return trainDataMat, testDataMat, trainLabel, testLabel
 
 def matSuffleByRow(matIn, label = None, seed = 1):
@@ -554,11 +616,63 @@ def matToLabel(labelIn,arrLabelDict):
         labelOut.append(arrLabelDict[tuple(arr)])
     return labelOut
 
+def matAlignByName(mats,nameTemp,labels,names):
+    #coding
+    '''
+    coding
+    '''
+#    nameTemp = names[0]
+    nameArgArgIndex = np.argsort(np.argsort(nameTemp))
+    matsOut = []
+    labelsOut = []
+#    matsOut.append(mats[0])
+#    labelsOut.append(np.array(labels[0]))
+    indexes = []
+#    indexes.append(np.array(range(len(nameTemp))))
+    for i in range(0,len(names)):
+        tmpName = names[i]
+        tmpArgIndex = np.argsort(tmpName)
+        tmpIndex = tmpArgIndex[nameArgArgIndex]
+        matsOut.append(mats[i][tmpIndex])
+        labelsOut.append(np.array(labels[i])[tmpIndex])
+        indexes.append(tmpIndex)
+    return matsOut, labelsOut, indexes
+        
 
+def splitMatByScale(scale, matIn, label, nameList = None, toShuffle=True, seed=1):
+    if toShuffle:
+        if not np.random.seed == seed:
+            np.random.seed = seed
+    indexArr = np.arange(len(label),dtype=int)
+    if toShuffle:
+        np.random.shuffle(indexArr)
+    sampleNum = len(label)
+
+    matOut = matIn.copy()[indexArr,:]
+    trainDataMat = matOut[:int(sampleNum*scale),:]
+    testDataMat = matOut[int(sampleNum*scale):,:]
+
+    labelOut = np.array(label)[indexArr]
+    trainLabel = labelOut[:int(sampleNum*scale)]
+    testLabel = labelOut[int(sampleNum*scale):]
+    if not nameList is None:
+        nameListOut = np.array(nameList)[indexArr]
+        namesTrain = nameListOut[:int(sampleNum*scale)]
+        namesTest = nameListOut[int(sampleNum*scale):]
+        return trainDataMat, testDataMat, trainLabel, testLabel, namesTrain, namesTest
+    return trainDataMat, testDataMat, trainLabel, testLabel
+    
 
 
   
-    
+#for debug
+#tmpName1 = ['a','b','c']    
+#tmpName2 = ['c','a','b']    
+#tmpMat1 = np.array([[1,1],[2,2],[3,3]])
+#tmpMat2 = np.array([[6,6],[4,4],[5,5]])
+#tmpLabel1 = [1,1,0]
+#tmpLabel2 = [1,1,0]
+#matsOut, labelsOut, indexes, nameTemp = matAlignByName([tmpMat1,tmpMat2],[tmpLabel1,tmpLabel2],[tmpName1,tmpName2])
      
 
 
