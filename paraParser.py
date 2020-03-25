@@ -243,6 +243,7 @@ def getDefaultParameters():
                 'paraSaveName' : None,
                 'seed' : 1,
                 'labelToMat' : False,
+                'colorText' : 'Auto',
                 'verbose' : True,
                 }
     #'firstKernelSize' were exclued from intSet

@@ -11,15 +11,18 @@ processing the modeling
 rest
 new flag for checking the parameters
 
-dataloader for different model index
-function for model merge
+###dataloader for different model index
+###function for model merge
 for predicting
-Kmer 
-check the labels, should be the same
-label to mat
-the input shape of the first layer (or change the function of reshape)
-
+#Kmer 
+###check the labels, should be the same
+#label to mat
+#the input shape of the first layer (or change the function of reshape)
+--reshapeSize
 '''
+import matplotlib
+defaultBackEnd = matplotlib.get_backend()
+matplotlib.use('Agg')
 
 import os, sys, re
 sys.path.append(os.path.curdir)
@@ -36,6 +39,8 @@ import analysisPlot
 import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
 import tensorflow as tf
+from utils import TextDecorate
+td = TextDecorate()
 
 paraDict = paraParser.parseParameters(sys.argv[1:])
 
@@ -49,9 +54,7 @@ dataTypeList = paraDict['dataType']
 dataEncodingType = paraDict['dataEncodingType']
 
 firstKernelSize = paraDict['firstKernelSize']
-print('debug0',firstKernelSize)
 tmp = ','.join(firstKernelSize)
-print('debug1',tmp)
 if len(tmp) > 0:
     firstKernelSizes = eval(tmp)
 else:
@@ -76,6 +79,9 @@ weightLoadFile = paraDict['weightLoadFile']
 dataSplitScale = paraDict['dataSplitScale']
 outSaveFolderPath = paraDict['outSaveFolderPath']
 showFig = paraDict['showFig']
+if showFig:
+    matplotlib.use(defaultBackEnd)
+
 saveFig = paraDict['saveFig']
 savePrediction = paraDict['savePrediction']
 paraSaveName = paraDict['paraSaveName']
@@ -115,20 +121,32 @@ if not weightSaveName is None:
     if not weightSaveName.endswith('.bin'):
         weightSaveName += '.bin'
 
+colorText = paraDict['colorText']
+if colorText.lower() == 'auto':
+    import platform
+    if 'win' in platform.system().lower():
+        td.disable()
+elif not bool(eval(colorText)):
+    td.disable()
+
 verbose = paraDict['verbose']
 
 if verbose:
-    print('Parameters:')
+    td.printC('Parameters:','B')
     paraParser.printParameters(paraDict)
-    print('Generating dataset...')
-    print('Checking the number of train files, which should be larger than 1 (e.g. at least two labels)...')
+    td.printC('Generating dataset...','b')
+    td.printC('Checking the number of train files, which should be larger than 1 (e.g. at least two labels)...','b')
 assert len(dataTrainFilePaths) > 1
+if verbose:
+    td.printC('......OK','g')
 
 if noGPU:
     if verbose:
-        print('As set by user, gpu will be disabled.')
+        td.printC('As set by user, gpu will be disabled.','g')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 else:
+    if verbose:
+        td.printC('Using gpu if possible...','g')
     #check the version of tensorflow before configuration
     tfVersion = tf.__version__
     if int(tfVersion.split('.')[0]) >= 2:
@@ -142,48 +160,49 @@ else:
         sess = tf.Session(config=config)
     
 if verbose:
-    print('Checking the number of the train files and the labels, they should be the same')    
+    td.printC('Checking the number of the train files and the labels, they should be the same','b')    
 assert len(dataTrainFilePaths) == len(dataTrainLabel)
-    
+if verbose:
+    td.printC('......OK','g')
 
 if not len(dataTypeList) == len(modelLoadFile):
     if verbose:
-        print('Please provide enough data type as the number of --modelLoadFile')
+        td.printC('Please provide enough data type(s) as the number of --modelLoadFile','r')
 assert len(dataTypeList) == len(modelLoadFile)
 
 featureGenerators = []
 for i,subDataType in enumerate(dataTypeList):
     if subDataType.lower() == 'protein':
         if verbose:
-            print('Enconding protein data...')
-        featureGenerator = dataProcess.ProteinFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+            td.printC('Enconding protein data for model %d ...' %i,'b')
+        featureGenerator = dataProcess.ProteinFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     elif subDataType.lower() == 'dna':
         if verbose:
-            print('Enconding DNA data...')
-        featureGenerator = dataProcess.DNAFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+            td.printC('Enconding DNA data for model %d ...' %i,'b')
+        featureGenerator = dataProcess.DNAFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     elif subDataType.lower() == 'rna':
         if verbose:
-            print('Enconding RNA data...')
-        featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType, useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+            td.printC('Enconding RNA data for model %d ...' %i,'b')
+        featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     elif subDataType.lower() == 'other':
         if verbose:
-            print('Reading data in CSV format...')
+            td.printC('Reading CSV-like data for model %d ...' %i,'b')
         featureGenerator = dataProcess.OtherFeatureGenerator()
     else:
-        print('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType)
+        td.printC('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType, 'r')
     featureGenerators.append(featureGenerator)
     assert subDataType.lower() in ['protein','dna','rna','other']
 
 if len(dataTestFilePaths) > 0:
     if verbose:
-        print('test datafiles provided, the test dataset will be generated from the test datafiles...')
-        print('Checking the number of test files, which should be larger than 0 (e.g. at least one labels)...')
-    assert len(dataTestFilePaths) > 0
+        td.printC('test datafiles provided, the test dataset will be generated from the test datafiles...', 'b')
     if verbose:
-        print('Checking the number of the test files and the labels, they should be the same')  
+        td.printC('Checking the number of the test files and the labels, they should be the same', 'b')  
     assert len(dataTestFilePaths) == len(dataTestLabel)
     if verbose:
-        print('Begin to generate train dataset...')
+        td.printC('......OK','g')
+    if verbose:
+        td.printC('Begin to generate training datasets...','b')
     
     trainDataLoadDict = {}
     for modelIndex in range(len(modelLoadFile)):
@@ -209,7 +228,8 @@ if len(dataTestFilePaths) > 0:
       
     
     if verbose:
-        print('Begin to generate test dataset...')
+        td.printC('Training datasets generated.','g')
+        td.printC('Begin to generate test datasets...','b')
     
     testDataLoadDict = {}    
     for modelIndex in range(len(modelLoadFile)):
@@ -232,13 +252,70 @@ if len(dataTestFilePaths) > 0:
         testDataMats.append(testDataMat)
         testLabelArrs.append(testLabelArr)
         testNameLists.append(nameList)
+    if verbose:
+        td.printC('Test datasets generated.','g')
 else:
     if verbose:
-        print('No test datafiles provided, the test dataset will be generated by spliting the train datafiles...')
-        print('Checking if the scale for spliting provided...')
+        td.printC('No test datafiles provided, the test dataset will be generated by spliting the train datafiles...','b')
+        td.printC('Checking if the scale for spliting (--dataSplitScale) provided...','b')
         assert not dataSplitScale is None
-        print('Generating the train and test datasets')
+        td.printC('......OK','g')
+        td.printC('Generating the train and test datasets','b')
     
+    trainDataLoadDict = {}
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoadDict[modelIndex] = []
+#    trainDataLoaders = []
+    for i,dataPath in enumerate(dataTrainFilePaths):
+        modelIndex = dataTrainModelInd[i]
+        featureGenerator = featureGenerators[modelIndex]
+        dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
+        dataLoader.readFile(dataPath, spcLen = spcLen[modelIndex])
+        trainDataLoadDict[modelIndex].append(dataLoader)
+    
+    trainDataMats = []
+    trainLabelArrs = []
+    trainNameLists = []
+    for modelIndex in range(len(modelLoadFile)):
+        trainDataLoaders = trainDataLoadDict[modelIndex]
+        trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
+        trainDataMat, trainLabelArr, nameList = trainDataSetCreator.getDataSet(toShuffle=False, seed=seed, withNameList=True)
+        trainDataMats.append(trainDataMat)
+        trainLabelArrs.append(trainLabelArr)
+        trainNameLists.append(nameList)
+    #the split of the name becomes complex since different dataloader could get different sequence of the sample
+    #thus the matrix should be alignmented once before split
+    nameTemp = trainNameLists[0]
+    trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
+    trainNameLists = [nameTemp] * len(trainNameLists)
+    
+    trainDataMatsNew = []
+    trainLabelArrsNew = []
+    trainNameListsNew = []
+    testDataMatsNew = []
+    testLabelArrsNew = []
+    testNameListsNew = []
+    indexArr = np.arange(len(trainLabelArrs[0]),dtype=int)
+    np.random.shuffle(indexArr)
+    for modelIndex in range(len(modelLoadFile)):
+        matIn = trainDataMats[modelIndex]
+        label = trainLabelArrs[modelIndex]
+        nameList = trainNameLists[modelIndex]
+        trainDataMat, testDataMat, trainLabel, testLabel, namesTrain, namesTest = dataProcess.splitMatByScaleAndIndex(dataSplitScale, matIn, label, indexArr, nameList = nameList)    
+        trainDataMatsNew.append(trainDataMat)
+        trainLabelArrsNew.append(trainLabel)
+        trainNameListsNew.append(namesTrain)
+        testDataMatsNew.append(testDataMat)
+        testLabelArrsNew.append(testLabel)
+        testNameListsNew.append(namesTest)
+    trainDataMats = trainDataMatsNew
+    trainLabelArrs = trainLabelArrsNew
+    trainNameLists = trainNameListsNew
+    testDataMats = testDataMatsNew
+    testLabelArrs = testLabelArrsNew
+    testNameLists = testNameListsNew
+        
+    '''    
     trainDataLoadDict = {}
     for modelIndex in range(len(modelLoadFile)):
         trainDataLoadDict[modelIndex] = []
@@ -266,24 +343,24 @@ else:
         testDataMats.append(testDataMat)
         testLabelArrs.append(testLabel)
         testNameLists.append(namesTest)
+    '''
+    if verbose:
+        td.printC('Training and test datasets generated.','g')
     
-    
-#    trainDataLoaders = []
-#    for i,dataPath in enumerate(dataTrainFilePaths):
-#        dataLoader = dataProcess.DataLoader(label = dataTrainLabel[i], featureGenerator=featureGenerator)
-#        dataLoader.readFile(dataPath, spcLen = spcLen)
-#        trainDataLoaders.append(dataLoader)
-#    trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
-#    trainDataMat, testDataMat, trainLabelArr, testLabelArr = trainDataSetCreator.getTrainTestSet(dataSplitScale, toShuffle=shuffleDataTrain, seed=seed)
 
 if shuffleDataTrain:
+    if verbose:
+        td.printC('Shuffling training datasets.','b')
     nameTemp = trainNameLists[0]
+#    print(nameTemp)
     np.random.seed = seed
     np.random.shuffle(nameTemp)
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
 #    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
     
 if shuffleDataTest:
+    if verbose:
+        td.printC('Shuffling test datasets.','b')
     nameTemp = testNameLists[0]
     np.random.seed = seed
     np.random.shuffle(nameTemp)
@@ -301,9 +378,10 @@ for tmpLabel in testLabelArrs:
     
 if labelToMat:
     if verbose:
-        print('Since labelToMat is set, the labels would be changed to matrix')
+        td.printC('Since labelToMat is set, the labels would be changed to onehot-like matrix','b')
     trainLabelArr,trainLabelArrDict,trainArrLabelDict = dataProcess.labelToMat(trainLabelArrs[0])
     testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArrs[0])
+#    print(testLabelArr)
 else:
     trainLabelArr = trainLabelArrs[0]
     testLabelArr = testLabelArrs[0]
@@ -311,23 +389,23 @@ else:
 
     
 if verbose:
-    print('Datasets generated')
+#    print('Datasets generated')
     for i,trainDataMat in enumerate(trainDataMats):
         testDataMat = testDataMats[i]
-        print('The %dth scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(i,trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
-    print('begin to prepare model...')
+        td.printC('The %dth scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(i,trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]), 'b')    
+    td.printC('Begin to prepare model...','b')
     
-if not inputLength is None:
-    if inputLength == 0:
-        inputLength = trainDataMat.shape[1]
+#if not inputLength is None:
+#    if inputLength == 0:
+#        inputLength = trainDataMat.shape[1]
 
 
 
 if verbose:
-    print('Checking module file for modeling')
+    td.printC('Checking module file for modeling','b')
 if len(modelLoadFile) < 1:
     if verbose:
-        print('please provide a model file in a python script or a json file. You can find some examples in the \'model\' folder')
+        td.printC('please provide a model file in a python script or a json file. You can find some examples in the \'model\' folder', 'r')
 assert not len(modelLoadFile) < 1
 
 models = []
@@ -341,12 +419,13 @@ for i,subModelFile in enumerate(modelLoadFile):
         model = moduleRead.readModelFromJsonFileDirectly(subModelFile,weightFile=weightFile)
     models.append(model)
 
+
 #input_length
 if len(inputLength) < 1:
     inputLength = []
     for i,trainDataMat in enumerate( trainDataMats ):
         inputLength.append(trainDataMat.shape[1])        
-moduleRead.modifyInputLengths(models,inputLength)
+moduleRead.modifyInputLengths(models,inputLength,verbose=verbose,td=td)
 
 
 
@@ -383,22 +462,54 @@ if len(firstKernelSizes) > 0:
     for i,model in enumerate(models):
         firstKernelSize = tuple(firstKernelSizes[i])
         if verbose:
-            print('--firstKernelSize %s is provided, program will use it' %(str(firstKernelSize)))
+            td.printC('--firstKernelSize %s is provided, program will use it to change the layer if possible' %(str(firstKernelSize)),'b')
+            td.printC('Note that --firstKernelSize will be abandoned in the next version, please modify the model file directly or using --reshapSizes for dataset instead','p')
         moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
 
 #merge model
 if len(modelLoadFile) > 1:
     try:
+        if verbose:
+            td.printC('Multiple models detected, trying to merge them directly... ','b')
         model = moduleRead.modelMerge(models)
+        if verbose:
+            td.printC('Merging finished. ','g')
     except:
-        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats, reshapeSize=None, verbose=verbose)
+        if verbose:
+            td.printC('Merging failed, trying adding reshape layer for the models... ','b')
+        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=None, verbose=verbose, td=td)
+        if verbose:
+            td.printC('Merging finished. ','g')
 else:
+    if verbose:
+        td.printC('Only one model detected, will use it for training...','b')
     model = models[0]
-
+    try:
+        modelInputShape = model.input.shape
+#        print(modelInputShape)
+        shapeProdNum = None
+        for tmpVal in modelInputShape:
+            if 'value' in dir(tmpVal):
+                tmpVal = tmpVal.value
+            if tmpVal is None:
+                continue
+            else:
+                if shapeProdNum is None:
+                    shapeProdNum = 1
+                shapeProdNum *= tmpVal
+#        assert (shapeProdNum is None) or (shapeProdNum == trainDataMats[0].shape[1])
+        if not shapeProdNum is None:
+#            td.printC(str(shapeProdNum),'r')
+            assert shapeProdNum == trainDataMats[0].shape[1]        
+    except:        
+        if verbose:
+            td.printC('The input_shape %s of the first layer is not consistent with the datashape %s, a reshape layer will be added.' %(str(model.layers[0].input_shape),str(trainDataMats[0].shape[1:])),'b')
+        model = moduleRead.reshapeSingleModelLayer(model,trainDataMats[0],reshapeSize=None,verbose=verbose,td=td)
+        print(model.layers[0].input_length)
 moduleRead.modelCompile(model,loss = loss,optimizer = optimizer,metrics = metrics)
 
 if verbose:
-    print('Start training...')
+    td.printC('Start training...','b')
 #print(len(trainDataMats))
 history = analysisPlot.LossHistory()
 if len(trainDataMats) == 1:
@@ -406,7 +517,7 @@ if len(trainDataMats) == 1:
 else:
     model.fit(trainDataMats, trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
 if verbose:
-    print('Training finished, generating the summary of the module')
+    td.printC('Training finished, generating the summary of the module','b')
     model.summary()
 
 if not outSaveFolderPath is None:
@@ -414,54 +525,57 @@ if not outSaveFolderPath is None:
         os.makedirs(outSaveFolderPath, exist_ok=True)
     else:
         if verbose:
-            print('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath)
+            td.printC('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath,'p')
 if not modelSaveName is None:
     tmpModelOutPath = outSaveFolderPath + os.path.sep + modelSaveName
     tmpWeightOutPath = None
     if not weightSaveName is None:
         tmpWeightOutPath = outSaveFolderPath + os.path.sep + weightSaveName
     if verbose:
-        print('\'modelSaveName\' provided, module will be saved at %s' %tmpModelOutPath)
+        td.printC('\'modelSaveName\' provided, module will be saved at %s' %tmpModelOutPath,'g')
         if not tmpWeightOutPath is None:
-            print('Weights will be saved at %s' %tmpWeightOutPath)
+            td.printC('Weights will be saved at %s' %tmpWeightOutPath,'g')
     moduleRead.saveBuiltModel(model, tmpModelOutPath, weightPath=tmpWeightOutPath)
 
 if verbose:
     tmpFigSavePath = None
     if showFig:
-        print('Drawing figure recording loss...')    
+        td.printC('Drawing figure recording loss...','b')    
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'epoch_loss.pdf'
-        print('Saving figure recording loss at %s' %tmpFigSavePath)
+        td.printC('Saving figure recording loss at %s' %tmpFigSavePath,'g')
     history.loss_plot('epoch',showFig=showFig,savePath=tmpFigSavePath)
 
 
 predicted_Probability = model.predict(testDataMats)
 if not 'predict_classes' in dir(model):
     prediction = np.rint(predicted_Probability)
+    if labelToMat:
+        prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict)
 else:
     prediction = model.predict_classes(testDataMats)
-
 
 if labelToMat:
     testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
 else:
     testLabelArr = testLabelArrs[0]
-print('Showing the confusion matrix')
+td.printC('Showing the confusion matrix','b')
+#print(testLabelArr)
+#print(prediction)
 cm=confusion_matrix(testLabelArr,prediction)
-print(cm)
-print("ACC: %f "%accuracy_score(testLabelArr,prediction))
+td.printC(str(cm),'B')
+td.printC("ACC: %f "%accuracy_score(testLabelArr,prediction),'B')
 if not labelToMat:
-    print("F1: %f "%f1_score(testLabelArr,prediction))
-    print("Recall: %f "%recall_score(testLabelArr,prediction))
-    print("Pre: %f "%precision_score(testLabelArr,prediction))
-    print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
-    print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
+    td.printC("F1: %f "%f1_score(testLabelArr,prediction),'B')
+    td.printC("Recall: %f "%recall_score(testLabelArr,prediction),'B')
+    td.printC("Pre: %f "%precision_score(testLabelArr,prediction),'B')
+    td.printC("MCC: %f "%matthews_corrcoef(testLabelArr,prediction),'B')
+    td.printC("AUC: %f "%roc_auc_score(testLabelArr,prediction),'B')
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
     if verbose:
-        print('Saving predictions at %s' %tmpPredictSavePath)
+        td.printC('Saving predictions at %s' %tmpPredictSavePath,'g')
     with open(tmpPredictSavePath, 'w') as FIDO:
         FIDO.write('Label\tPrediction\tPobability\n')
         for i in range(len(testLabelArr)):
@@ -481,7 +595,7 @@ if savePrediction:
             FIDO.write(tmpStr)
     tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
     if verbose:
-        print('Saving confusion matrix and predicting performance at %s' %tmpPredictSavePath)
+        td.printC('Saving confusion matrix and predicting performance at %s' %tmpPredictSavePath,'g')
     with open(tmpCMPath, 'w') as FIDO:
         FIDO.write('Confusion Matrix:\n')
         for i in range(cm.shape[0]):
@@ -502,22 +616,22 @@ if not labelToMat:
     tmpFigSavePath = None
     if showFig:  
         if verbose:
-            print('Plotting the ROC and PR curves...')
+            td.printC('Plotting the ROC and PR curves...','b')
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
         if verbose:
-            print('Saving figure recording ROC curve at %s' %tmpFigSavePath)        
+            td.printC('Saving figure recording ROC curve at %s' %tmpFigSavePath,'g')        
     analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
         if verbose:
-            print('Saving figure recording ROC curve at %s' %tmpFigSavePath)       
+            td.printC('Saving figure recording ROC curve at %s' %tmpFigSavePath,'g')       
         analysisPlot.plotPR(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
 
 if not paraSaveName is None:
     tmpParaSavePath = outSaveFolderPath + os.path.sep + paraSaveName
     if verbose:
-        print('Saving parameters at %s' %tmpParaSavePath)       
+        td.printC('Saving parameters at %s' %tmpParaSavePath, 'g')       
 #    paraParser.saveParameters(tmpParaSavePath,sys.argv[1:])
     paraParser.saveParameters(tmpParaSavePath,paraDict)
-print('Finished')
+td.printC('Finished','g')

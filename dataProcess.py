@@ -8,6 +8,7 @@ data builder
 """
 
 import numpy as np
+import os
 
 class FeatureGenerator:
     '''
@@ -351,23 +352,25 @@ class DataLoader:
                         then at most first 100 residues will be used, if the length is less than 100, 
                         few 'X' will be added at the end.
         """
+        fileabsName = os.path.split(inpFile)[-1]
         for line in open(inpFile):
             if line.startswith('#'):
-               continue 
+                continue 
             if line.startswith('>'):
-               name = line.replace('>','').split()[0]
-               annotation = line.strip()
-               self.names.append(name)
-               self.seqs[name] = ''
-               self.annotation[name] = annotation
+#               name = line.replace('>','').split()[0]
+                name = fileabsName + '_' + line.replace('>','').split()[0]
+                annotation = line.strip()
+                self.names.append(name)
+                self.seqs[name] = ''
+                self.annotation[name] = annotation
             else:
-               self.seqs[name] += line.replace('\n','')
+                self.seqs[name] += line.replace('\n','')
     
         for name in self.names:
             if len(self.seqs[name]) <= spcLen:
-               self.seqs[name] = self.seqs[name] + "X" * (spcLen - len(self.seqs[name]))
+                self.seqs[name] = self.seqs[name] + "X" * (spcLen - len(self.seqs[name]))
             else:
-               self.seqs[name] = self.seqs[name][0:spcLen]
+                self.seqs[name] = self.seqs[name][0:spcLen]
                
    
     def readMatFile(self,inpFile,sep=','):
@@ -388,6 +391,7 @@ class DataLoader:
     
     def readFile(self,inpFile,**kwargs):
         if self.featureGenerator.generatorType == 'Other':
+            del kwargs['spcLen']
             self.readMatFile(inpFile,**kwargs)
         else:
             self.readFastaFile(inpFile,**kwargs)
@@ -616,11 +620,8 @@ def matToLabel(labelIn,arrLabelDict):
         labelOut.append(arrLabelDict[tuple(arr)])
     return labelOut
 
-def matAlignByName(mats,nameTemp,labels,names):
-    #coding
-    '''
-    coding
-    '''
+def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):
+
 #    nameTemp = names[0]
     nameArgArgIndex = np.argsort(np.argsort(nameTemp))
     matsOut = []
@@ -629,6 +630,12 @@ def matAlignByName(mats,nameTemp,labels,names):
 #    labelsOut.append(np.array(labels[0]))
     indexes = []
 #    indexes.append(np.array(range(len(nameTemp))))
+    
+    if checkNameLength:
+        nameTempSet = set(nameTemp)
+        for tmpName in names:
+            tmpSet = set(tmpName)
+            assert nameTempSet == tmpSet
     for i in range(0,len(names)):
         tmpName = names[i]
         tmpArgIndex = np.argsort(tmpName)
@@ -639,13 +646,13 @@ def matAlignByName(mats,nameTemp,labels,names):
     return matsOut, labelsOut, indexes
         
 
-def splitMatByScale(scale, matIn, label, nameList = None, toShuffle=True, seed=1):
-    if toShuffle:
-        if not np.random.seed == seed:
-            np.random.seed = seed
-    indexArr = np.arange(len(label),dtype=int)
-    if toShuffle:
-        np.random.shuffle(indexArr)
+def splitMatByScaleAndIndex(scale, matIn, label, indexArr, nameList = None, seed=1):
+#    if toShuffle:
+#        if not np.random.seed == seed:
+#            np.random.seed = seed
+#    indexArr = np.arange(len(label),dtype=int)
+#    if toShuffle:
+#        np.random.shuffle(indexArr)
     sampleNum = len(label)
 
     matOut = matIn.copy()[indexArr,:]
