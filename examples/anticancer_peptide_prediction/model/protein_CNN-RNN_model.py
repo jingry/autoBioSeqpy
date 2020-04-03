@@ -9,7 +9,7 @@ from keras import optimizers
 max_features = 26
 embedding_size = 128
 kernel_size = 5
-filters = 250
+filters = 150
 pool_size = 2
 lstm_output_size = 64
 
@@ -18,9 +18,9 @@ lstm_output_size = 64
 
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(Dropout(0.2))
 model.add(Conv1D(filters, kernel_size,padding ='valid',activation = 'relu',strides = 1))
 model.add(AveragePooling1D(pool_size = pool_size))
+model.add(Dropout(0.2))
 model.add(Bidirectional(LSTM(lstm_output_size)))
 model.add(Dense(1))
 model.add(Activation('sigmoid'))

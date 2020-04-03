@@ -8,7 +8,7 @@ from keras import optimizers
 
 max_features = 26
 embedding_size = 128
-filters = 250
+filters = 150
 kernel_size = 5 
 pool_size = 2
 hidden_dims = 650
