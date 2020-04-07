@@ -1,7 +1,7 @@
 --dataType dna dna
 --dataEncodingType onehot onehot
 --spcLen 30 30
---firstKernelSize [[4 5] [4 5]]
+--firstKernelSize 
 --dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
 --dataTrainLabel 1 0 1 0
 --dataTestFilePaths 
@@ -35,3 +35,4 @@
 --labelToMat False
 --colorText Auto
 --verbose True
+--reshapeSize [[10 12 1]  [16 29 1]]

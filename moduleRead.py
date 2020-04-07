@@ -256,7 +256,7 @@ def reshapeSingleModelLayer(model,dataMat,reshapeSize=None,verbose=False,td=td):
             td.printC('New shape %s generated and will be added as the input layer to the current model' %(str(tmpShape)),'g')
     else:
         if verbose:
-            td.printC('Reshape size provided by user, will use it directly', 'g')
+            td.printC('Reshape size %s provided by user, will use it directly' %(str(reshapeSize)), 'g')
         tmpShape = reshapeSize
         tmpShape = tuple(np.array(tmpShape,dtype=int))
     newModel = keras.models.Sequential()

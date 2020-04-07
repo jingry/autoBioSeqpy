@@ -9,8 +9,8 @@ processing the modeling
 
 '''
 rest
-new flag for checking the parameters
 
+new flag for checking the parameters
 ###dataloader for different model index
 ###function for model merge
 for predicting
@@ -18,7 +18,8 @@ for predicting
 ###check the labels, should be the same
 #label to mat
 #the input shape of the first layer (or change the function of reshape)
---reshapeSize
+#--reshapeSize
+descriptions
 '''
 import matplotlib
 defaultBackEnd = matplotlib.get_backend()
@@ -29,7 +30,7 @@ sys.path.append(os.path.curdir)
 sys.path.append(sys.argv[0])
 
 import paraParser
-if '--help' in sys.argv:
+if '-h' in sys.argv or '--help' in sys.argv:
     paraParser.showHelpDoc()
     exit()
 
@@ -39,7 +40,7 @@ import analysisPlot
 import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
 import tensorflow as tf
-from utils import TextDecorate
+from utils import TextDecorate, evalStrList
 td = TextDecorate()
 
 paraDict = paraParser.parseParameters(sys.argv[1:])
@@ -54,11 +55,23 @@ dataTypeList = paraDict['dataType']
 dataEncodingType = paraDict['dataEncodingType']
 
 firstKernelSize = paraDict['firstKernelSize']
-tmp = ','.join(firstKernelSize)
-if len(tmp) > 0:
-    firstKernelSizes = eval(tmp)
+#tmp = ','.join(firstKernelSize)
+#tmp = re.sub('\[\,+\[','[[',tmp)
+#tmp = re.sub('\[\,+([^\]])','[\\1',tmp)
+#tmp = re.sub('\],+\[','],[',tmp)
+#tmp = re.sub('\]\,+\]',']]',tmp)
+if len(firstKernelSize) > 0:
+#    firstKernelSizes = eval(tmp)
+    firstKernelSizes = evalStrList(firstKernelSize)
 else:
     firstKernelSizes = []
+    
+reshapeSize = paraDict['reshapeSize']
+if len(reshapeSize) > 0:
+    reshapeSizes = evalStrList(reshapeSize)
+else:
+    reshapeSizes = None
+
 dataTrainFilePaths = paraDict['dataTrainFilePaths']
 dataTrainLabel = paraDict['dataTrainLabel']
 dataTestFilePaths = paraDict['dataTestFilePaths']
@@ -459,12 +472,19 @@ for i,model in enumerate(models):
 '''
 #first kernel size
 if len(firstKernelSizes) > 0:
-    for i,model in enumerate(models):
-        firstKernelSize = tuple(firstKernelSizes[i])
+    if len(models) == 1:
+        firstKernelSize = tuple(np.array(firstKernelSizes).flatten())
         if verbose:
             td.printC('--firstKernelSize %s is provided, program will use it to change the layer if possible' %(str(firstKernelSize)),'b')
-            td.printC('Note that --firstKernelSize will be abandoned in the next version, please modify the model file directly or using --reshapSizes for dataset instead','p')
-        moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
+            td.printC('Note that --firstKernelSize will be abandoned in the next version, please modify the model file directly or using --reshapSizes instead','p')
+        moduleRead.modifyFirstKenelSizeDirectly(models[0], firstKernelSize)
+    else:
+        for i,model in enumerate(models):
+            firstKernelSize = tuple(firstKernelSizes[i])
+            if verbose:
+                td.printC('--firstKernelSize %s is provided, program will use it to change the layer if possible' %(str(firstKernelSize)),'b')
+                td.printC('Note that --firstKernelSize will be abandoned in the next version, please modify the model file directly or using --reshapSizes instead','p')
+            moduleRead.modifyFirstKenelSizeDirectly(model, firstKernelSize)
 
 #merge model
 if len(modelLoadFile) > 1:
@@ -477,7 +497,7 @@ if len(modelLoadFile) > 1:
     except:
         if verbose:
             td.printC('Merging failed, trying adding reshape layer for the models... ','b')
-        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=None, verbose=verbose, td=td)
+        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=reshapeSizes, verbose=verbose, td=td)
         if verbose:
             td.printC('Merging finished. ','g')
 else:
@@ -504,7 +524,11 @@ else:
     except:        
         if verbose:
             td.printC('The input_shape %s of the first layer is not consistent with the datashape %s, a reshape layer will be added.' %(str(model.layers[0].input_shape),str(trainDataMats[0].shape[1:])),'b')
-        model = moduleRead.reshapeSingleModelLayer(model,trainDataMats[0],reshapeSize=None,verbose=verbose,td=td)
+        if reshapeSizes is None:
+            currReshapeSize = None
+        else:
+            currReshapeSize = np.array(reshapeSizes).flatten()
+        model = moduleRead.reshapeSingleModelLayer(model,trainDataMats[0],reshapeSize=currReshapeSize,verbose=verbose,td=td)
         print(model.layers[0].input_length)
 moduleRead.modelCompile(model,loss = loss,optimizer = optimizer,metrics = metrics)
 

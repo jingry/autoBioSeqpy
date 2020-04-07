@@ -245,6 +245,7 @@ def getDefaultParameters():
                 'labelToMat' : False,
                 'colorText' : 'Auto',
                 'verbose' : True,
+                'reshapeSize' : [],
                 }
     #'firstKernelSize' were exclued from intSet
     intSet = set(['seed','spcLen','batch_size','epochs','KMerNum','dataTrainLabel','dataTestLabel','dataTrainModelInd','dataTestModelInd','figDPI'])

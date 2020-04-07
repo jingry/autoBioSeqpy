@@ -10,7 +10,7 @@ Including:
 Decorate the text with colors
 Part of the codes from  https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-terminal-in-python
 """
-
+import re
 class Bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -66,7 +66,23 @@ class TextDecorate(Bcolors):
         
     def printC(self, textIn, color):
         self.printDecorate(textIn, color)    
-        
+
+def evalStrList(listIn,sep=','):
+    '''
+    String of list to an object
+    Sometimes we will get the input like [ [ 1, 3, 4], [4,5 , 7] ] as input
+    Then it becomes [,[,1,,3,,4],,[4,5,,,7],] after join the ','
+    But the expection is [[1,3,4],[4,5,7]]
+    So this function is to do this such thing
+    '''
+    tmp = ','.join(listIn)
+    tmp = re.sub(',+',',',tmp) #,, -> ,
+    tmp = re.sub('\[\,+\[','[[',tmp) #[,[ -> [[
+    tmp = re.sub('\[\,+([^\]])','[\\1',tmp) #[,. -> [.
+    tmp = re.sub('\]\,+\]',']]',tmp)#],] -> ]]
+    return eval(tmp)
+    
+    
 if __name__ == "__main__":
     #print(bcolors.WARNING + "Warning: No active frommets remain. Continue?" + bcolors.ENDC)
 #    print(Bcolors.HEADER + "HEADER: No active frommets remain. Continue?" + bcolors.ENDC)
