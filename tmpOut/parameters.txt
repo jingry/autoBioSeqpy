@@ -1,27 +1,27 @@
---dataType dna dna
---dataEncodingType onehot onehot
---spcLen 30 30
+--dataType dna
+--dataEncodingType onehot
+--spcLen 30
 --firstKernelSize 
---dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
---dataTrainLabel 1 0 1 0
+--dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
+--dataTrainLabel 1 0
 --dataTestFilePaths 
 --dataTestLabel 
---dataTrainModelInd 0 0 1 1
+--dataTrainModelInd 
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
---showFig False
+--showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
 --dataSplitScale 0.8
---modelLoadFile examples/CRISPRCas9guideefficiency/model/tmp2D.py examples/CRISPRCas9guideefficiency/model/tmp2D2mer.py
+--modelLoadFile examples/CRISPRCas9guideefficiency/model/DNA_CNN2D_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
 --batch_size 25
 --epochs 40
---useKMer False True
---KMerNum 0 2
+--useKMer 
+--KMerNum 
 --inputLength 
 --loss binary_crossentropy
 --optimizer optimizers.Adam()
@@ -35,4 +35,4 @@
 --labelToMat False
 --colorText Auto
 --verbose True
---reshapeSize [[10 12 1]  [16 29 1]]
+--reshapeSize 10 12 1

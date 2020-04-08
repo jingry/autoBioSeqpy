@@ -21,6 +21,8 @@ for predicting
 #--reshapeSize
 descriptions
 '''
+
+#%% init
 import matplotlib
 defaultBackEnd = matplotlib.get_backend()
 matplotlib.use('Agg')
@@ -144,6 +146,7 @@ elif not bool(eval(colorText)):
 
 verbose = paraDict['verbose']
 
+#%%checking parameters
 if verbose:
     td.printC('Parameters:','B')
     paraParser.printParameters(paraDict)
@@ -183,6 +186,7 @@ if not len(dataTypeList) == len(modelLoadFile):
         td.printC('Please provide enough data type(s) as the number of --modelLoadFile','r')
 assert len(dataTypeList) == len(modelLoadFile)
 
+#%% feature generator
 featureGenerators = []
 for i,subDataType in enumerate(dataTypeList):
     if subDataType.lower() == 'protein':
@@ -206,6 +210,7 @@ for i,subDataType in enumerate(dataTypeList):
     featureGenerators.append(featureGenerator)
     assert subDataType.lower() in ['protein','dna','rna','other']
 
+#%% dataset generating
 if len(dataTestFilePaths) > 0:
     if verbose:
         td.printC('test datafiles provided, the test dataset will be generated from the test datafiles...', 'b')
@@ -298,9 +303,14 @@ else:
         trainNameLists.append(nameList)
     #the split of the name becomes complex since different dataloader could get different sequence of the sample
     #thus the matrix should be alignmented once before split
-    nameTemp = trainNameLists[0]
+    nameTemp = trainNameLists[0].copy()
+    np.random.shuffle(nameTemp) #shuffle the dataset at first
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
     trainNameLists = [nameTemp] * len(trainNameLists)
+    
+#    tmpTempLabel = trainLabelArrs[0]
+#    for tmpLabel in trainLabelArrs:
+#        assert np.sum(np.array(tmpTempLabel) - np.array(tmpLabel)) == 0
     
     trainDataMatsNew = []
     trainLabelArrsNew = []
@@ -360,24 +370,25 @@ else:
     if verbose:
         td.printC('Training and test datasets generated.','g')
     
-
+#nameTemp = trainNameLists[0]
 if shuffleDataTrain:
     if verbose:
         td.printC('Shuffling training datasets.','b')
-    nameTemp = trainNameLists[0]
 #    print(nameTemp)
+    nameTemp = trainNameLists[0].copy()
     np.random.seed = seed
     np.random.shuffle(nameTemp)
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
 #    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
-    
+
+#nameTemp = testNameLists[0]    
 if shuffleDataTest:
     if verbose:
         td.printC('Shuffling test datasets.','b')
-    nameTemp = testNameLists[0]
+    nameTemp = testNameLists[0].copy()    
     np.random.seed = seed
     np.random.shuffle(nameTemp)
-    testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMat,nameTemp,testLabelArr,trainNameLists)
+    testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMats,nameTemp,testLabelArrs,testNameLists)
 
 #    testDataMat, testLabelArr = dataProcess.matSuffleByRow(testDataMat, testLabelArr)
 
@@ -412,7 +423,7 @@ if verbose:
 #    if inputLength == 0:
 #        inputLength = trainDataMat.shape[1]
 
-
+#%% model config
 
 if verbose:
     td.printC('Checking module file for modeling','b')
@@ -522,16 +533,17 @@ else:
 #            td.printC(str(shapeProdNum),'r')
             assert shapeProdNum == trainDataMats[0].shape[1]        
     except:        
-        if verbose:
-            td.printC('The input_shape %s of the first layer is not consistent with the datashape %s, a reshape layer will be added.' %(str(model.layers[0].input_shape),str(trainDataMats[0].shape[1:])),'b')
+#        if verbose:
+#            td.printC('The input_shape %s of the first layer is not consistent with the datashape %s, a reshape layer will be added.' %(str(model.input.shape),str(trainDataMats[0].shape[1:])),'b')
         if reshapeSizes is None:
             currReshapeSize = None
         else:
             currReshapeSize = np.array(reshapeSizes).flatten()
         model = moduleRead.reshapeSingleModelLayer(model,trainDataMats[0],reshapeSize=currReshapeSize,verbose=verbose,td=td)
-        print(model.layers[0].input_length)
+#        print(model.input)
 moduleRead.modelCompile(model,loss = loss,optimizer = optimizer,metrics = metrics)
 
+#%% training and predicting
 if verbose:
     td.printC('Start training...','b')
 #print(len(trainDataMats))
@@ -583,6 +595,9 @@ if labelToMat:
     testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
 else:
     testLabelArr = testLabelArrs[0]
+
+
+#%% output analysis
 td.printC('Showing the confusion matrix','b')
 #print(testLabelArr)
 #print(prediction)

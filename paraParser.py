@@ -258,6 +258,8 @@ def getDefaultParameters():
 def addSingleParameter(paraDict, numSet, intSet, boolSet, objSet, tmpName, tmpVal, modifiedSet):    
     if not tmpName in paraDict:
         return
+    if len(tmpVal) == 0:
+        return
     if re.sub('\s','',tmpVal) == 'None':
         tmpVal = None
     elif tmpName in intSet:
