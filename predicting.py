@@ -119,10 +119,17 @@ for i,k in enumerate(sys.argv):
     elif k == '--verbose':
         verbose = sys.argv[i+1]
 
-
+colorText = paraDict['colorText']
+if colorText.lower() == 'auto':
+    import platform
+    if 'win' in platform.system().lower():
+        td.disable()
+elif not bool(eval(colorText)):
+    td.disable()
+    
 if noGPU:
     if verbose:
-        print('As set by user, gpu will be disabled.')
+        td.printC('As set by user, gpu will be disabled.','g')
     os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 else:
     #check the version of tensorflow before configuration
@@ -191,12 +198,11 @@ for i,subDataType in enumerate(dataTypeList):
 
 
 if verbose:
-    print('test datafiles should be provided, the test dataset will be generated from the test datafiles...')
-    print('Checking the number of test files, which should be larger than 1 (e.g. at least two labels)...')
+    td.printC('Checking the number of test files, which should be larger than 1 (e.g. at least two labels)...','b')
 assert len(dataTestFilePaths) > 0
 
 if verbose:
-    print('Begin to generate test dataset...')
+    td.printC('Begin to generate test dataset...','b')
 
 testDataLoadDict = {}    
 for modelIndex in range(len(modelLoadFile)):
@@ -240,7 +246,7 @@ for tmpLabel in testLabelArrs:
 
 if labelToMat:
     if verbose:
-        td.printC('Since labelToMat is set, the labels would be changed to onehot-like matrix','b')
+        td.printC('Since labelToMat is set, the labels would be changed to onehot-like matrix','g')
     testLabelArr,testLabelArrDict,testArrLabelDict = dataProcess.labelToMat(testLabelArrs[0])
 #    print(testLabelArr)
 else:
@@ -250,7 +256,7 @@ else:
     
 if verbose:
 #    print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
-    print('begin to prepare model...')
+    td.printC('begin to prepare model...','b')
 #    print('Loading keras model from .py files...')
     
 
@@ -262,21 +268,21 @@ if verbose:
 
 
 if verbose:
-    print('Checking module file for modeling')
+    td.printC('Checking module file for modeling','b')
 if modelPredictFile is None:
     if verbose:
-        print('please provide a model file in a json file.')
+        td.printC('please provide a model file in a json file.','r')
 if weightLoadFile is None:
     if verbose:
-        print('the weight file is necessary for predicting, otherwise the model will be with initialized weight')
+        td.printC('the weight file is necessary for predicting, otherwise the model will be with initialized weight','r')
 assert not modelPredictFile is None
 assert not weightLoadFile is None
 
 if verbose:
-    print('Loading module and weight file')
+    td.printC('Loading module and weight file','b')
 model = moduleRead.readModelFromJsonFileDirectly(modelPredictFile,weightLoadFile)
 if verbose:
-    print('Module loaded, generating the summary of the module')
+    td.printC('Module loaded, generating the summary of the module','b')
     model.summary()
 #    
 #if '2D' in str(model.layers[0].__class__):
@@ -297,31 +303,31 @@ if not outSaveFolderPath is None:
         os.makedirs(outSaveFolderPath, exist_ok=True)
     else:
         if verbose:
-            print('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath)
+            td.printC('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath,'p')
 
 
 predicted_Probability = model.predict(testDataMats)
 if not 'predict_classes' in dir(model):
     prediction = np.rint(predicted_Probability)
-    if labelToMat:
-        prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict)
+#    if labelToMat:
+#        prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict,td=td)
 else:
     prediction = model.predict_classes(testDataMats)
 
-if labelToMat:
-    testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
-else:
-    testLabelArr = testLabelArrs[0]
+#if labelToMat:
+#    testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
+#else:
+#    testLabelArr = testLabelArrs[0]
     
-predicted_Probability = model.predict(testDataMat)
-prediction = model.predict_classes(testDataMat)
+#predicted_Probability = model.predict(testDataMat)
+#prediction = model.predict_classes(testDataMat)
 
 
 
 if not predictionSavePath is None:
     tmpPredictSavePath = predictionSavePath
     if verbose:
-        print('Saving predictions at %s' %tmpPredictSavePath)
+        td.printC('Saving predictions at %s' %tmpPredictSavePath,'g')
     with open(tmpPredictSavePath, 'w') as FIDO:
         FIDO.write('#Label\tPrediction\tPobability\n')
         for i in range(len(testLabelArr)):
@@ -341,8 +347,9 @@ if not predictionSavePath is None:
             FIDO.write(tmpStr)
 else:
     if verbose:
-        print('No save path prvided, the predictions will be listed in STDOUT')
+        td.printC('No save path prvided, the predictions will be listed in STDOUT','p')
     print('\n\n')
+#    print(predicted_Probability)
     print('#Instance\tPrediction\tPobability')
     for i in range(len(testLabelArr)):
         tmpLabel = i
@@ -361,4 +368,4 @@ else:
     print('\n\n')
 
 
-print('Finished')
+td.printC('Finished','g')

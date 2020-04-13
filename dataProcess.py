@@ -604,7 +604,7 @@ def labelToMat(labelIn):
         labelOut.append(labelArrDict[label])
     return np.array(labelOut),labelArrDict,arrLabelDict
 
-def matToLabel(labelIn,arrLabelDict):
+def matToLabel(labelIn,arrLabelDict,td=None):
     """
     Change the label back to list as the following:
         [1,0,0] =>  [0,1,2,1,1]
@@ -617,7 +617,13 @@ def matToLabel(labelIn,arrLabelDict):
     """
     labelOut = []
     for arr in labelIn:
-        labelOut.append(arrLabelDict[tuple(arr)])
+        k = tuple(arr)
+        if k in arrLabelDict:
+            labelOut.append(arrLabelDict[tuple(arr)])
+        else:
+            if td:
+                td.printC('Irregular label detected and will be changed to \'0\', which usually means the training is not enough','p')
+            labelOut.append(0)
     return labelOut
 
 def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):

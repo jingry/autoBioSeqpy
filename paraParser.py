@@ -37,17 +37,18 @@ import warnings
 helpText = '''
 Usage python running.py <--dataTrainFilePaths PATH1 PATH2 ...> <--dataTrainLabel label1 label2 ...> <--dataType protein/dna/rna> <--modelLoadFile modelPath> [options]
 options:
-    --dataType              {protein, dna, rna} 
-                            No default value, should be provided by user
-                            The type of the data, should be protein, dna or rna (upper case is supported either)
+    --dataType              list of {protein, dna, rna, other} 
+                            No default value, should be provided by user, The length shoud be the same as len(--modelLoadFile)
+                            The type of the data, should be protein, dna, rna or other (upper case is supported either), where 'other' means a matrix which contain some manual features, please see our template in folder 'examples' or the manual for details. For example, if we have two models for rna and matrix, the values are:
+                                --dataType rna other
                             
     --dataEncodingType      list of {onehot, dict} 
-                            Default: Dict
+                            Default: Dict, The length shoud be the same as len(--modelLoadFile)
                             the type for encoding the data, if dict choosed, a character (e.g. A/G/C/T for DNA) is represented as a number (such as A:1 T:2 C:3 T:4), and if onehot choosed, a character will be represented as an array (such as A:[1,0,0,0] G:[0,1,0,0] C:[0,0,1,0] T[0,0,0,1])         
                             
-    --spcLen                int 
-                            Default: 100
-                            The length of the input sequence which will be used for enconding. If the length of an input sequence is larger than the 'spcLen', the exceed part will be ignored, and if the length is less than 'spcLen', zeros (or zero arrays) will be added to make the length to 100.
+    --spcLen                list of int 
+                            Default: [100] * len(--modelLoadFile), i.e. The length shoud be the same as len(--modelLoadFile)
+                            The length of the input sequence which will be used for enconding. If the length of an input sequence is larger than the 'spcLen', the exceed part will be ignored, and if the length is less than 'spcLen', zeros (or zero arrays) will be added to make the length to 100. Since different model would have different spcLen, the number of models and spcLen are the same.
                             
     --dataTrainFilePaths    list of paths
                             No default value, should be provided by user
@@ -60,7 +61,7 @@ options:
                                 --dataTrainLabel 1 0
                         
     --dataTrainModelInd     list of int
-                            No default value, should be provided by user
+                            No default value, should be provided by user. The length shoud be the same as len(--dataTrainModelInd)
                             The index for the model of each file, and the length should be the same as --dataTrainFilePaths, and the values should be not larger than --modelLoadFile. As the example, if three FASTA files and two models (model_0, model_1 for example) provided, so the index could be:
                                 --dataTrainModelInd 1 1 0
                             Here the '1 1 0' means the first two data will be train by model_1 and the 3rd model will be trained by model_0
@@ -77,7 +78,7 @@ options:
                             The format is the same as --dataTrainLabel but for the test data. The length should be the same as --dataTestFilePaths
     
     --dataTestModelInd      list of int
-                            No default value, should be provided by user
+                            No default value, should be provided by user. The length shoud be the same as len(--dataTestLabel)
                             The index for the model of each test file if provided. The other explainations are the same with --dataTrainModelInd
                         
     --outSaveFolderPath     string
@@ -110,8 +111,8 @@ options:
                             No default value
                             Load the Keras model for modeling. Both user made model (in .py file) and keras model (in .json file) are supported. Few templates in python script (e.g. .py file) are provided in folder 'models'.
                             
-    --weightLoadFile        string of path
-                            No default value
+    --weightLoadFile        list of path
+                            No default value. The length shoud be the same as len(--modelLoadFile)
                             Relating: --modelLoadFile
                             A built Keras model could save weight file as well, thus the weight file could be loaded when loading the model
                             
@@ -135,19 +136,25 @@ options:
                             False
                             To considering the environment of a residue. For example, if a sequence is ATTACT, and '--KMerNum' is 3, then the first A will be considered as 'ATT' and the shape of dataset will be expanded accordingly (see the manual for more details).
                             
-    --KMerNum               int
-                            Default: 3
+    --KMerNum               list of int
+                            Default: [3] * len(--modelLoadFile), i.e. The length shoud be the same as len(--modelLoadFile)
                             Relating: --userKMer
                             The length of the sequence which will be taken as environment, please see the details of '--UseKMer'
                             
-    --inputLength           int
-                            No default value
+    --inputLength           (will be abandoned) list of int
+                            No default value. The length shoud be the same as len(--modelLoadFile)
                             A parameter for 2D layer. This parameter is added to modify the size of the built model before compiling. The "batch_input_shape" and "input_length" will be changed according to this parameter. If not provided, program will change the size to the current shape automaticly if a 2D convolution layer is used as the first layer.
                             
-    --firstKernelSize       int
-                            No default value
+    --firstKernelSize       (will be abandoned) list of int
+                            No default value. The length shoud be the same as len(--modelLoadFile)
                             A parameter for changing the kernel size of the first layer. Since the shape of input dataset might be not fit for the first layer, this parameter is added to modify the size of the built model before compiling. The "kernel_size" will be changed according to this parameter. If not provided, program will change the size to the current shape automaticly.
                             
+    --reshapeSize           list or matrix
+                            If not provided, autoBioSeqpy will try to generate it automaticly.
+                            Since the model provided in seperated file, and the data will change all the time, to make the input shape of the model be compatible with the data shape, a reshape layer might be necessary. Since the layer size would be more than 1-dim, the input template could be :
+                                --reshapeSize [[10,20,1],[30,13,1]]        
+                            More details could be found in the manual.    
+    
     --loss                  string of loss function
                             Default: 'binary_crossentropy'
                             Keras parameter, available candidates are 'mean_squared_error', 'mean_absolute_error', 'mean_absolute_percentage_error', 'mean_squared_logarithmic_error', 'squared_hinge', 'hinge', 'categorical_hinge', 'logcosh', 'categorical_crossentropy', 'sparse_categorical_crossentropy', 'binary_crossentropy', 'kullback_leibler_divergence', 'poisson', 'cosine_proximity'
@@ -166,11 +173,11 @@ options:
                             (reference https://keras.io/metrics/)
                             
     --modelSaveName         String of name
-                            No default value
+                            No default value.
                             Save the built model in json format.
                             
     --weightSaveName        String of name
-                            No default value
+                            No default value.
                             Save the weights of built model in binary format.
                             
     --noGPU                 bool
@@ -196,7 +203,11 @@ options:
     --seed                  int
                             Default: 1
                             The random seed of numpy.
-                        
+                            
+    --colorText             {0,1,auto}
+                            Default: auto
+                            Using different color for the text to make the message easier for figure out. 'auto' means this function will be used in linux and disabled in windows.
+                            
     --verbose               bool
                             Default: False
                             See a detailed output when the script running.

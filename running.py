@@ -10,16 +10,19 @@ processing the modeling
 '''
 rest
 
-new flag for checking the parameters
+new flag for checking the parameters (recheck needed)
 ###dataloader for different model index
 ###function for model merge
-for predicting
+#for predicting
 #Kmer 
 ###check the labels, should be the same
 #label to mat
 #the input shape of the first layer (or change the function of reshape)
 #--reshapeSize
 descriptions
+
+manual (the relation of the parameters and the reshape size, matrix in datatype)
+jupyter notebook
 '''
 
 #%% init
@@ -42,6 +45,7 @@ import analysisPlot
 import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
 import tensorflow as tf
+import keras
 from utils import TextDecorate, evalStrList
 td = TextDecorate()
 
@@ -217,8 +221,20 @@ if len(dataTestFilePaths) > 0:
     if verbose:
         td.printC('Checking the number of the test files and the labels, they should be the same', 'b')  
     assert len(dataTestFilePaths) == len(dataTestLabel)
+    
+    if not len(dataTrainModelInd) == len(dataTrainFilePaths):
+        td.printC('The length of --dataTrainModelInd and --dataTrainFilePaths are not the same','r')
+        assert len(dataTrainModelInd) == len(dataTrainFilePaths)
+    
+    if not len(dataTestModelInd) == len(dataTestFilePaths):
+        td.printC('The length of --dataTestModelInd and --dataTestFilePaths are not the same','r')
+        assert len(dataTrainModelInd) == len(dataTrainFilePaths)
+    
     if verbose:
         td.printC('......OK','g')
+        
+
+        
     if verbose:
         td.printC('Begin to generate training datasets...','b')
     
@@ -278,6 +294,9 @@ else:
         td.printC('Checking if the scale for spliting (--dataSplitScale) provided...','b')
         assert not dataSplitScale is None
         td.printC('......OK','g')
+    if not len(dataTrainModelInd) == len(dataTrainFilePaths):
+        td.printC('The length of --dataTrainModelInd and --dataTrainFilePaths are not the same','r')
+        assert len(dataTrainModelInd) == len(dataTrainFilePaths)
         td.printC('Generating the train and test datasets','b')
     
     trainDataLoadDict = {}
@@ -426,7 +445,7 @@ if verbose:
 #%% model config
 
 if verbose:
-    td.printC('Checking module file for modeling','b')
+    td.printC('Checking the number of model files','b')
 if len(modelLoadFile) < 1:
     if verbose:
         td.printC('please provide a model file in a python script or a json file. You can find some examples in the \'model\' folder', 'r')
@@ -441,7 +460,14 @@ for i,subModelFile in enumerate(modelLoadFile):
         model = moduleRead.readModelFromPyFileDirectly(subModelFile,weightFile=weightFile)
     else:
         model = moduleRead.readModelFromJsonFileDirectly(subModelFile,weightFile=weightFile)
+    for tmpmode in models:
+        #some time the model will be the same in MEMORY! So I have to change it.
+        if model is tmpmode:
+            model = keras.models.clone_model(tmpmode)
+            break
     models.append(model)
+    
+
 
 
 #input_length
@@ -553,7 +579,7 @@ if len(trainDataMats) == 1:
 else:
     model.fit(trainDataMats, trainLabelArr,batch_size = batch_size,epochs = epochs,validation_split = 0.1,callbacks = [history])
 if verbose:
-    td.printC('Training finished, generating the summary of the module','b')
+    td.printC('Training finished, generating the summary of the model','b')
     model.summary()
 
 if not outSaveFolderPath is None:
@@ -587,7 +613,7 @@ predicted_Probability = model.predict(testDataMats)
 if not 'predict_classes' in dir(model):
     prediction = np.rint(predicted_Probability)
     if labelToMat:
-        prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict)
+        prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict,td=td)
 else:
     prediction = model.predict_classes(testDataMats)
 
@@ -664,7 +690,7 @@ if not labelToMat:
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
         if verbose:
-            td.printC('Saving figure recording ROC curve at %s' %tmpFigSavePath,'g')       
+            td.printC('Saving figure recording PR curve at %s' %tmpFigSavePath,'g')       
         analysisPlot.plotPR(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
 
 if not paraSaveName is None:

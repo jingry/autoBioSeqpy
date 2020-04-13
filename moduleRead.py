@@ -207,13 +207,15 @@ def reshapeSingleModelLayer(model,dataMat,reshapeSize=None,verbose=False,td=td):
 #        return newModel
     try:
         baseShape = subLayer.input_shape
+#        print(1,baseShape)
     except:
         baseShape = [None]+list(subLayer.kernel_size)
+#        print(2,baseShape)
         while len(baseShape) < 4:
             baseShape += [1]
     if len(baseShape) == 2:
         if verbose:
-            td.printC('The input shape %s contains only 2 dimensions, which is unable to make the reshape. Thus one additional dimention will be added, please modify the model file if you don\'t want to change the input shape','p')
+            td.printC('The input shape %s contains only 2 dimensions, which is unable to make the reshape. Thus one additional dimention will be added, please modify the model file if you don\'t want to change the input shape' %str(baseShape),'p')
         baseShape = list(baseShape) + [1]
     dataFeaLength = dataMat.shape[1]
     primeFactors,symbol = getPrimeFactor(dataFeaLength)

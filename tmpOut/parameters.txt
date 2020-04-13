@@ -1,25 +1,25 @@
---dataType dna
---dataEncodingType onehot
---spcLen 30
+--dataType protein protein
+--dataEncodingType dict dict
+--spcLen 2000 2000
 --firstKernelSize 
---dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
---dataTrainLabel 1 0
---dataTestFilePaths 
---dataTestLabel 
---dataTrainModelInd 
---dataTestModelInd 
+--dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
+--dataTrainLabel 0 1 2 3 4 5 0 1 2 3 4 5
+--dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
+--dataTestLabel 0 1 2 3 4 5 0 1 2 3 4 5
+--dataTrainModelInd 0 0 0 0 0 0 1 1 1 1 1 1
+--dataTestModelInd 0 0 0 0 0 0 1 1 1 1 1 1
 --outSaveFolderPath tmpOut
 --showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale 0.8
---modelLoadFile examples/CRISPRCas9guideefficiency/model/DNA_CNN2D_model.py
+--dataSplitScale None
+--modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 25
---epochs 40
+--batch_size 40
+--epochs 5
 --useKMer 
 --KMerNum 
 --inputLength 
@@ -32,7 +32,7 @@
 --paraFile None
 --paraSaveName parameters.txt
 --seed 1
---labelToMat False
+--labelToMat True
 --colorText Auto
 --verbose True
---reshapeSize 10 12 1
+--reshapeSize 
