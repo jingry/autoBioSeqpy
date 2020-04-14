@@ -1,25 +1,25 @@
---dataType protein protein
---dataEncodingType dict dict
---spcLen 2000 2000
+--dataType protein
+--dataEncodingType dict
+--spcLen 100
 --firstKernelSize 
---dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
---dataTrainLabel 0 1 2 3 4 5 0 1 2 3 4 5
---dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
---dataTestLabel 0 1 2 3 4 5 0 1 2 3 4 5
---dataTrainModelInd 0 0 0 0 0 0 1 1 1 1 1 1
---dataTestModelInd 0 0 0 0 0 0 1 1 1 1 1 1
+--dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
+--dataTrainLabel 1 0
+--dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt
+--dataTestLabel 1 0
+--dataTrainModelInd 
+--dataTestModelInd 
 --outSaveFolderPath tmpOut
 --showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py
+--modelLoadFile examples/typeIIIsecretedeffectors/model/protein_biLSTM_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 40
---epochs 5
+--batch_size 60
+--epochs 20
 --useKMer 
 --KMerNum 
 --inputLength 
@@ -32,7 +32,7 @@
 --paraFile None
 --paraSaveName parameters.txt
 --seed 1
---labelToMat True
+--labelToMat False
 --colorText Auto
 --verbose True
 --reshapeSize 

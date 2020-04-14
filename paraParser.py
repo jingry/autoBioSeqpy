@@ -132,8 +132,8 @@ options:
                             Default: 100
                             The parameter for keras to decide the number of iteration of training
                             
-    --useKMer               bool
-                            False
+    --useKMer               list of bool
+                            Default: [False] * len(--modelLoadFile), i.e. The length shoud be the same as len(--modelLoadFile)
                             To considering the environment of a residue. For example, if a sequence is ATTACT, and '--KMerNum' is 3, then the first A will be considered as 'ATT' and the shape of dataset will be expanded accordingly (see the manual for more details).
                             
     --KMerNum               list of int

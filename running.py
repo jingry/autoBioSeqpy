@@ -20,6 +20,7 @@ new flag for checking the parameters (recheck needed)
 #the input shape of the first layer (or change the function of reshape)
 #--reshapeSize
 descriptions
+checke the samples kept the features after shuffled
 
 manual (the relation of the parameters and the reshape size, matrix in datatype)
 jupyter notebook
@@ -400,6 +401,12 @@ if shuffleDataTrain:
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
 #    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
 
+#import pickle
+#with open('../tmpdata2Train.bin','wb') as FIDO:
+#    pickle.dump(trainDataMats,FIDO)
+#with open('../tmpdata2Test.bin','wb') as FIDO:
+#    pickle.dump(testDataMats,FIDO)    
+#assert False
 #nameTemp = testNameLists[0]    
 if shuffleDataTest:
     if verbose:
