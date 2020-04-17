@@ -1,27 +1,27 @@
---dataType protein
---dataEncodingType dict
---spcLen 100
+--dataType dna other
+--dataEncodingType onehot other
+--spcLen 30 30
 --firstKernelSize 
---dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
---dataTrainLabel 1 0
---dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt
---dataTestLabel 1 0
---dataTrainModelInd 
+--dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt ../tryPython/1.txt ../tryPython/0.txt
+--dataTrainLabel 1 0 1 0
+--dataTestFilePaths 
+--dataTestLabel 
+--dataTrainModelInd 0 0 1 1
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
 --showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale None
---modelLoadFile examples/typeIIIsecretedeffectors/model/protein_biLSTM_model.py
+--dataSplitScale 0.8
+--modelLoadFile examples/CRISPRCas9guideefficiency/model/tmp2D.py ../tryPython/tmpDense.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 60
---epochs 20
---useKMer 
---KMerNum 
+--batch_size 25
+--epochs 40
+--useKMer False None
+--KMerNum 0 None
 --inputLength 
 --loss binary_crossentropy
 --optimizer optimizers.Adam()

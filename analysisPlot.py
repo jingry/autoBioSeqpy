@@ -86,7 +86,7 @@ def plotPR(test,score, savePath = None, showFig = True, **kwargs):
          }
     plt.xlabel('Recall',font)
     plt.ylabel('Precision',font)
-    plt.title('Precision recallcurve',font)
+    plt.title('Precision recall curve',font)
     plt.legend(loc="lower right")
     if not savePath is None:
         plt.savefig(savePath, **kwargs)

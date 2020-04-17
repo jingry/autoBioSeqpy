@@ -37,13 +37,13 @@ import warnings
 helpText = '''
 Usage python running.py <--dataTrainFilePaths PATH1 PATH2 ...> <--dataTrainLabel label1 label2 ...> <--dataType protein/dna/rna> <--modelLoadFile modelPath> [options]
 options:
-    --dataType              list of {protein, dna, rna, other} 
+    --dataType              list of unit in {protein, dna, rna, other} 
                             No default value, should be provided by user, The length shoud be the same as len(--modelLoadFile)
                             The type of the data, should be protein, dna, rna or other (upper case is supported either), where 'other' means a matrix which contain some manual features, please see our template in folder 'examples' or the manual for details. For example, if we have two models for rna and matrix, the values are:
                                 --dataType rna other
                             
     --dataEncodingType      list of {onehot, dict} 
-                            Default: Dict, The length shoud be the same as len(--modelLoadFile)
+                            No default value, The length shoud be the same as len(--modelLoadFile)
                             the type for encoding the data, if dict choosed, a character (e.g. A/G/C/T for DNA) is represented as a number (such as A:1 T:2 C:3 T:4), and if onehot choosed, a character will be represented as an array (such as A:[1,0,0,0] G:[0,1,0,0] C:[0,0,1,0] T[0,0,0,1])         
                             
     --spcLen                list of int 
@@ -79,7 +79,7 @@ options:
     
     --dataTestModelInd      list of int
                             No default value, should be provided by user. The length shoud be the same as len(--dataTestLabel)
-                            The index for the model of each test file if provided. The other explainations are the same with --dataTrainModelInd
+                            The index for the model of each test file if provided. The other explanations  are the same with --dataTrainModelInd
                         
     --outSaveFolderPath     string
                             No default value
@@ -111,7 +111,7 @@ options:
                             No default value
                             Load the Keras model for modeling. Both user made model (in .py file) and keras model (in .json file) are supported. Few templates in python script (e.g. .py file) are provided in folder 'models'.
                             
-    --weightLoadFile        list of path
+    --weightLoadFile        list of paths
                             No default value. The length shoud be the same as len(--modelLoadFile)
                             Relating: --modelLoadFile
                             A built Keras model could save weight file as well, thus the weight file could be loaded when loading the model
@@ -150,8 +150,8 @@ options:
                             A parameter for changing the kernel size of the first layer. Since the shape of input dataset might be not fit for the first layer, this parameter is added to modify the size of the built model before compiling. The "kernel_size" will be changed according to this parameter. If not provided, program will change the size to the current shape automaticly.
                             
     --reshapeSize           list or matrix
-                            If not provided, autoBioSeqpy will try to generate it automaticly.
-                            Since the model provided in seperated file, and the data will change all the time, to make the input shape of the model be compatible with the data shape, a reshape layer might be necessary. Since the layer size would be more than 1-dim, the input template could be :
+                            If not provided, autoBioSeqpy will try to generate it automatically.
+                            Since the model provided in separated  file, and the data will change all the time, to make the input shape of the model be compatible with the data shape, a reshape layer might be necessary. Since the layer size would be more than 1-dim, the input template could be :
                                 --reshapeSize [[10,20,1],[30,13,1]]        
                             More details could be found in the manual.    
     

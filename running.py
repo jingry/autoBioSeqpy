@@ -10,7 +10,7 @@ processing the modeling
 '''
 rest
 
-new flag for checking the parameters (recheck needed)
+new flag for checking the parameters (file name!)
 ###dataloader for different model index
 ###function for model merge
 #for predicting
@@ -459,9 +459,15 @@ if len(modelLoadFile) < 1:
 assert not len(modelLoadFile) < 1
 
 models = []
+if len(weightLoadFile) > 0:
+    if verbose:
+        td.printC('Weight file provided by users, checking the number which should be the same as the model files.','b')
+    assert len(weightLoadFile) == len(modelLoadFile)
+    if verbose:
+        td.printC('OK','g')
 for i,subModelFile in enumerate(modelLoadFile):
     weightFile = None
-    if len(weightLoadFile) > 1:
+    if len(weightLoadFile) > 0:
         weightFile = weightLoadFile[i]
     if subModelFile.endswith('.py'):
         model = moduleRead.readModelFromPyFileDirectly(subModelFile,weightFile=weightFile)
