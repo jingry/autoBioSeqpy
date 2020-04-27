@@ -1,12 +1,12 @@
---dataType dna other
---dataEncodingType onehot other
---spcLen 30 30
+--dataType dna
+--dataEncodingType onehot
+--spcLen 30
 --firstKernelSize 
---dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt ../tryPython/1.txt ../tryPython/0.txt
---dataTrainLabel 1 0 1 0
+--dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt ../tryPython/randomSeqsNeg.txt
+--dataTrainLabel 1 0 0
 --dataTestFilePaths 
 --dataTestLabel 
---dataTrainModelInd 0 0 1 1
+--dataTrainModelInd 
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
 --showFig True
@@ -14,14 +14,14 @@
 --figDPI 300
 --savePrediction True
 --dataSplitScale 0.8
---modelLoadFile examples/CRISPRCas9guideefficiency/model/tmp2D.py ../tryPython/tmpDense.py
+--modelLoadFile examples/CRISPRCas9guideefficiency/model/DNA_CNN2D_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
 --batch_size 25
 --epochs 40
---useKMer False None
---KMerNum 0 None
+--useKMer 
+--KMerNum 
 --inputLength 
 --loss binary_crossentropy
 --optimizer optimizers.Adam()

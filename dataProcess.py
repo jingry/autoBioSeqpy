@@ -251,11 +251,16 @@ class ProteinFeatureGenerator(FeatureGenerator):
                 "U" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 "Z" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 }
-        self.word2int1DDict = {'G': 1, 'A': 2, 'V': 3, 'L': 4, 'I': 5, 'P': 6,
-                               'F': 7, 'Y': 8, 'W': 9, 'S': 10, 'T': 11, 'C': 12,
-                               'M': 13, 'N': 14, 'Q': 15, 'D': 16, 'E': 17,
-                               'K': 18, 'R': 19, 'H': 20, 'X': 21, 'B': 22,
-                               'J': 23, 'O': 24, 'U': 25, 'Z': 26}
+#        self.word2int1DDict = {'G': 1, 'A': 2, 'V': 3, 'L': 4, 'I': 5, 'P': 6,
+#                               'F': 7, 'Y': 8, 'W': 9, 'S': 10, 'T': 11, 'C': 12,
+#                               'M': 13, 'N': 14, 'Q': 15, 'D': 16, 'E': 17,
+#                               'K': 18, 'R': 19, 'H': 20, 'X': 21, 'B': 22,
+#                               'J': 23, 'O': 24, 'U': 25, 'Z': 26}
+        self.word2int1DDict = {'G': 0, 'A': 1, 'V': 2, 'L': 3, 'I': 4, 'P': 5,
+                               'F': 6, 'Y': 7, 'W': 8, 'S': 9, 'T': 10, 'C': 11,
+                               'M': 12, 'N': 13, 'Q': 14, 'D': 15, 'E': 16,
+                               'K': 17, 'R': 18, 'H': 19, 'X': 20, 'B': 21,
+                               'J': 22, 'O': 23, 'U': 24, 'Z': 25}
 #        self.wordIndexDict = {'G': 1, 'A': 2, 'V': 3, 'L': 4, 'I': 5, 'P': 6,
 #                               'F': 7, 'Y': 8, 'W': 9, 'S': 10, 'T': 11, 'C': 12,
 #                               'M': 13, 'N': 14, 'Q': 15, 'D': 16, 'E': 17,
@@ -285,7 +290,7 @@ class DNAFeatureGenerator(FeatureGenerator):
                 "T" : [0,0,0,1],
                 "X" : [0,0,0,0]
                 }
-        self.word2int1DDict = {'A':1,'G':2,'C':3,'T':4,'X':5}
+        self.word2int1DDict = {'A':0,'G':1,'C':2,'T':3,'X':4}
         self.wordIndexDict = {'A':0,'G':1,'C':2,'T':3,'X':4}
         self.generatorType = 'DNA'
 
@@ -306,7 +311,7 @@ class RNAFeatureGenerator(FeatureGenerator):
                 "U" : [0,0,0,1],
                 "X" : [0,0,0,0]
                 }
-        self.word2int1DDict = {'A':1,'G':2,'C':3,'U':4,'X':5}
+        self.word2int1DDict = {'A':0,'G':1,'C':2,'U':3,'X':4}
         self.wordIndexDict = {'A':0,'G':1,'C':2,'U':3,'X':4}
         self.generatorType = 'RNA'
 

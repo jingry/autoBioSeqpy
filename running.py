@@ -260,6 +260,10 @@ if len(dataTestFilePaths) > 0:
         trainDataMats.append(trainDataMat)
         trainLabelArrs.append(trainLabelArr)
         trainNameLists.append(nameList)
+        
+    nameTemp = trainNameLists[0].copy()
+    trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
+    trainNameLists = [nameTemp] * len(trainNameLists)
       
     
     if verbose:
@@ -287,6 +291,11 @@ if len(dataTestFilePaths) > 0:
         testDataMats.append(testDataMat)
         testLabelArrs.append(testLabelArr)
         testNameLists.append(nameList)
+        
+    nameTemp = testNameLists[0].copy()
+    testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMats,nameTemp,testLabelArrs,testNameLists)
+    testNameLists = [nameTemp] * len(testNameLists)
+    
     if verbose:
         td.printC('Test datasets generated.','g')
 else:
@@ -399,6 +408,7 @@ if shuffleDataTrain:
     np.random.seed = seed
     np.random.shuffle(nameTemp)
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
+    trainNameLists = [nameTemp] * len(trainNameLists)
 #    trainDataMat, trainLabelArr = dataProcess.matSuffleByRow(trainDataMat, trainLabelArr)
 
 #import pickle
@@ -415,7 +425,7 @@ if shuffleDataTest:
     np.random.seed = seed
     np.random.shuffle(nameTemp)
     testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMats,nameTemp,testLabelArrs,testNameLists)
-
+    testNameLists = [nameTemp] * len(testNameLists)
 #    testDataMat, testLabelArr = dataProcess.matSuffleByRow(testDataMat, testLabelArr)
 
 tmpTempLabel = trainLabelArrs[0]
@@ -629,7 +639,6 @@ if not 'predict_classes' in dir(model):
         prediction = dataProcess.matToLabel(np.array(prediction,dtype=int), testArrLabelDict,td=td)
 else:
     prediction = model.predict_classes(testDataMats)
-
 if labelToMat:
     testLabelArr = dataProcess.matToLabel(testLabelArr, testArrLabelDict)
 else:
@@ -654,22 +663,28 @@ if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
     if verbose:
         td.printC('Saving predictions at %s' %tmpPredictSavePath,'g')
+    nameTemp = testNameLists[0]
     with open(tmpPredictSavePath, 'w') as FIDO:
-        FIDO.write('Label\tPrediction\tPobability\n')
+        FIDO.write('#Name\tLabel\tPrediction\tProbability\n')
         for i in range(len(testLabelArr)):
             tmpLabel = testLabelArr[i]
-            tmpPrediction = prediction[i]
-            while len(tmpPrediction.shape) > 0:
+            tmpPrediction = np.array(prediction[i]).flatten()
+            if len(tmpPrediction) == 1:
                 tmpPrediction = tmpPrediction[0]
+            else:
+                td.printC('irregular prediction detected %s' %(str(tmpPrediction)))
+                tmpPrediction = tmpPrediction[0]
+#            while len(tmpPrediction.shape) > 0:
+#                tmpPrediction = tmpPrediction[0]
             tmpProbability = predicted_Probability[i]
 #            tmpStr = '%r\t%r\t%r\n' %(tmpLabel,tmpPrediction,tmpProbability)
             if len(tmpProbability.shape) == 0:
-                tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+                tmpStr = '%s\t%r\t%r\t%f\n' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability)
             else:
                 if len(tmpProbability) == 1:
-                    tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability[0])
+                    tmpStr = '%s\t%r\t%r\t%f\n' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability[0])
                 else:
-                    tmpStr = '%r\t%r\t[ %s ]\n' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
+                    tmpStr = '%s\t%r\t%r\t[ %s ]\n' %(nameTemp[i],tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
             FIDO.write(tmpStr)
     tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
     if verbose:

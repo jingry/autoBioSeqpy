@@ -229,6 +229,7 @@ if verbose:
     td.printC('Test datasets generated.','g')
 nameTemp = testNameLists[0]    
 testDataMats, testLabelArrs, sortedIndexes = dataProcess.matAlignByName(testDataMats,nameTemp,testLabelArrs,testNameLists)
+testNameLists = [nameTemp] * len(testNameLists)
     
 tmpTempLabel = testLabelArrs[0]
 for tmpLabel in testLabelArrs:
@@ -323,13 +324,13 @@ else:
 #prediction = model.predict_classes(testDataMat)
 
 
-
+nameTemp = testNameLists[0]
 if not predictionSavePath is None:
     tmpPredictSavePath = predictionSavePath
     if verbose:
         td.printC('Saving predictions at %s' %tmpPredictSavePath,'g')
     with open(tmpPredictSavePath, 'w') as FIDO:
-        FIDO.write('#Label\tPrediction\tPobability\n')
+        FIDO.write('#Name\tIndex\tPrediction\tProbability\n')
         for i in range(len(testLabelArr)):
             tmpLabel = i
             tmpPrediction = prediction[i]
@@ -338,19 +339,19 @@ if not predictionSavePath is None:
             tmpProbability = predicted_Probability[i]
 #            tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
             if len(tmpProbability.shape) == 0:
-                tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability)
+                tmpStr = '%s\t%r\t%r\t%f\n' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability)
             else:
                 if len(tmpProbability) == 1:
-                    tmpStr = '%r\t%r\t%f\n' %(tmpLabel,tmpPrediction,tmpProbability[0])
+                    tmpStr = '%s\t%r\t%r\t%f\n' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability[0])
                 else:
-                    tmpStr = '%r\t%r\t[ %s ]\n' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
+                    tmpStr = '%s\t%r\t%r\t[ %s ]\n' %(nameTemp[i],tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
             FIDO.write(tmpStr)
 else:
     if verbose:
         td.printC('No save path prvided, the predictions will be listed in STDOUT','p')
     print('\n\n')
 #    print(predicted_Probability)
-    print('#Instance\tPrediction\tPobability')
+    print('#Name\tIndex\tPrediction\tProbability')
     for i in range(len(testLabelArr)):
         tmpLabel = i
         tmpPrediction = prediction[i]
@@ -358,12 +359,12 @@ else:
             tmpPrediction = tmpPrediction[0]
         tmpProbability = predicted_Probability[i]
         if len(tmpProbability.shape) == 0:
-            tmpStr = '%r\t%r\t%f' %(tmpLabel,tmpPrediction,tmpProbability)
+            tmpStr = '%s\t%r\t%r\t%f' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability)
         else:
             if len(tmpProbability) == 1:
-                tmpStr = '%r\t%r\t%f' %(tmpLabel,tmpPrediction,tmpProbability[0])
+                tmpStr = '%s\t%r\t%r\t%f' %(nameTemp[i],tmpLabel,tmpPrediction,tmpProbability[0])
             else:
-                tmpStr = '%r\t%r\t[ %s ]' %(tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
+                tmpStr = '%s\t%r\t%r\t[ %s ]' %(nameTemp[i],tmpLabel,tmpPrediction,' , '.join(tmpProbability.astype(str)))
         print(tmpStr)
     print('\n\n')
 
