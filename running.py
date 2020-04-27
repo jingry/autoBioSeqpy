@@ -94,6 +94,7 @@ if len(modelLoadFile) == 1:
 spcLen = paraDict['spcLen']
 if len(spcLen) < 1:
     spcLen = [100] * len(modelLoadFile)
+
     
 weightLoadFile = paraDict['weightLoadFile']
 dataSplitScale = paraDict['dataSplitScale']
@@ -190,6 +191,11 @@ if not len(dataTypeList) == len(modelLoadFile):
     if verbose:
         td.printC('Please provide enough data type(s) as the number of --modelLoadFile','r')
 assert len(dataTypeList) == len(modelLoadFile)
+
+if not len(spcLen) == len(modelLoadFile):
+    if verbose:
+        td.printC('The number of --spcLen should be the same as --modelLoadFile','r')
+assert len(spcLen) == len(modelLoadFile)
 
 #%% feature generator
 featureGenerators = []

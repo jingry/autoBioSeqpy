@@ -12,8 +12,7 @@ import numpy as np
 sys.path.append('./libs')
 sys.path.append('./tool/libs')
 import sequenceshuffles as seqs
-
-'''
+helpStr = '''
 This script is to generate the shuffled sequences which keep the K-mer components.
 
 Usage:
@@ -53,11 +52,17 @@ Parameters:
                     Default: 2000
                     Related: --randomly
                     Larger buffer size could make the shuffled sequences more varied, but slower.
+    
+    --help          Print this document.
                 
  
 '''
 
+
 def main():
+    if '-h' in sys.argv or '--help' in sys.argv:
+        print(helpStr)
+        exit()
     paraDict = {
             'KMerNum' : 2,
             'outFile' : None,
