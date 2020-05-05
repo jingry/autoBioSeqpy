@@ -299,9 +299,12 @@ def addSingleParameter(paraDict, numSet, intSet, boolSet, objSet, tmpName, tmpVa
         modifiedSet.add(tmpName)
     
     
-def parseParameters(listIn):
+def parseParameters(listIn,defaultParaTuple=None):
     modifiedSet = set()
-    paraDict, numSet, intSet, boolSet, objSet = getDefaultParameters()
+    if defaultParaTuple is None:
+        paraDict, numSet, intSet, boolSet, objSet = getDefaultParameters()
+    else:
+        paraDict, numSet, intSet, boolSet, objSet = defaultParaTuple
     tmpName = None
     for i,subPara in enumerate(listIn):
         if subPara.startswith('-'):
@@ -345,12 +348,12 @@ def saveParameters(savePath,dictIn,sep=' '):
                 tmpStr += str(dictIn[k])
             FIDO.write(tmpStr+'\n')
         
-def parseParametersFromFile(fileIn,sep=' '):
+def parseParametersFromFile(fileIn,sep=' ',defaultParaTuple = None):
     paraIn = []
     with open(fileIn) as FID:
         for line in FID:
             if line.startswith('#'):
                 continue
             paraIn += line.strip().split(sep)
-    return parseParameters(paraIn)
+    return parseParameters(paraIn,defaultParaTuple=defaultParaTuple)
                                
