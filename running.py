@@ -291,12 +291,14 @@ print('Showing the confusion matrix')
 cm=confusion_matrix(testLabelArr,prediction)
 print(cm)
 print("ACC: %f "%accuracy_score(testLabelArr,prediction))
+auc=None
 if not labelToMat:
     print("F1: %f "%f1_score(testLabelArr,prediction))
     print("Recall: %f "%recall_score(testLabelArr,prediction))
     print("Pre: %f "%precision_score(testLabelArr,prediction))
     print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
     print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
+    auc = roc_auc_score(testLabelArr,prediction)
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
@@ -347,7 +349,7 @@ if not labelToMat:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
         if verbose:
             print('Saving figure recording ROC curve at %s' %tmpFigSavePath)        
-    analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
+    analysisPlot.plotROC(testLabelArr,predicted_Probability,auc=auc,showFig=showFig,savePath=tmpFigSavePath)
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
         if verbose:

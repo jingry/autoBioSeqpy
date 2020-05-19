@@ -46,12 +46,15 @@ class LossHistory(keras.callbacks.Callback):
             if showFig:
                 plt.show()
 
-def plotROC(test,score, savePath = None, showFig = True, **kwargs):
+def plotROC(test,score, auc=None, savePath = None, showFig = True, **kwargs):
     fpr,tpr,threshold = roc_curve(test, score)
     plt.figure()
     lw = 3
     plt.figure(figsize=(10,10))
-    plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)')
+    if auc is None:
+        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve')
+    else:
+        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -70,12 +73,12 @@ def plotROC(test,score, savePath = None, showFig = True, **kwargs):
     if showFig:
         plt.show()
 
-def plotPR(test,score, savePath = None, showFig = True, **kwargs):
+def plotPR(test,score,savePath = None, showFig = True, **kwargs):
     precision, recall, thresholds = precision_recall_curve(test, score)
     plt.figure()
     lw = 3
     plt.figure(figsize=(10,10))
-    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve (area = %0.2f)')
+    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve')
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])

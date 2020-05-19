@@ -107,11 +107,11 @@ options:
                             
     --shuffleDataTrain       bool
                             Default: True
-                            shuffle the sequence of training data
+                            shuffle the order of the dataset for training. 
                             
     --shuffleDataTest        bool
                             Default: False
-                            shuffle the sequence of test dataset. The default is False because the sequence will not change the modeling performance.
+                            shuffle the order of the dataset for training. The default is False because the sequence will not change the modeling performance.
                             
     --batch_size            int
                             Default: 40
