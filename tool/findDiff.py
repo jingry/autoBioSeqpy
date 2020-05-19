@@ -35,7 +35,7 @@ class outObj:
         self.probability = probability
     
     def diffProbability(self, otherObj):
-        return np.abs(self.probability - otherObj.probability)
+        return self.probability - otherObj.probability
 
 class outGroup:
     def __init__(self):
@@ -52,16 +52,20 @@ class outGroup:
         self.headObjDict[head].append(objIn)
         
     def printGroupDiff(self):
-        print('Name1 -- Name2\tIndex1 -- Index2\tPredction1 -- Prediction2\tabsProbDIff')
+        print('#Name1 -- Name2\tIndex1 -- Index2\tPredction1 -- Prediction2\tprobDIff')
         for head in self.headObjDict:
             groupLen = len(self.headObjDict[head])
             if groupLen == 1:
                 continue
-            for i in range(groupLen - 1):
+#            for i in range(groupLen - 1):
+            for i in range(groupLen):
                 obj1 = self.headObjDict[head][i]
-                for j in range(i+1,groupLen):                    
+#                for j in range(i+1,groupLen):                    
+                for j in range(groupLen):
+                    if i == j:
+                        continue
                     obj2 = self.headObjDict[head][j]
-                    diff = obj1.diffProbability(obj2)
+                    diff = obj2.diffProbability(obj1)
                     tmpstr = '%s -- %s\t%s -- %s\t%s -- %s\t' %(obj1.name,obj2.name,obj1.label,obj2.label,obj1.predict,obj2.predict)
                     if len(diff) == 1:
                         tmpstr += str(float(diff))

@@ -6,14 +6,6 @@ Created on Wed Apr 29 10:09:28 2020
 
 Model plotting
 
-    
-    
-need to do:
-    #flags (grid and single value, outFigFolder)
-    #test for single and multi models 
-    #help
-    manual
-    jupyter notebook
 """
 import os, sys
 sys.path.append('./libs')

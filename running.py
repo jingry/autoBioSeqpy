@@ -268,6 +268,7 @@ if len(dataTestFilePaths) > 0:
         trainNameLists.append(nameList)
         
     nameTemp = trainNameLists[0].copy()
+#    print(trainNameLists)
     trainDataMats, trainLabelArrs, sortedIndexes = dataProcess.matAlignByName(trainDataMats,nameTemp,trainLabelArrs,trainNameLists)
     trainNameLists = [nameTemp] * len(trainNameLists)
       

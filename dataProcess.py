@@ -302,7 +302,7 @@ class RNAFeatureGenerator(FeatureGenerator):
     '''
     def __init__(self, encodingType, useKMer = False, KMerNum = 3):
         FeatureGenerator.__init__(self, encodingType, useKMer = useKMer, KMerNum = KMerNum)
-        self.oneHotSeq = 'AGCTX'
+        self.oneHotSeq = 'AGCUX'
         self.oneHotIgnore = 'X'
         self.oneHot1DDict = {
                 "A" : [1,0,0,0],

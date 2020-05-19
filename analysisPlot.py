@@ -3,10 +3,11 @@
 """
 
 import keras
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
-
+import numpy as np
 
 class LossHistory(keras.callbacks.Callback):
     def on_train_begin(self,logs={}):
@@ -94,5 +95,108 @@ def plotPR(test,score, savePath = None, showFig = True, **kwargs):
     if showFig:
         plt.show()
 
+def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
+                   vmin = 0.0000001, xtitle = None, xticks = None,\
+                   xtickLabels=None, ytitle = None, yticks = None,\
+                   ytickLabels=None, colorBarTitle = None, xlim = None, \
+                   ylim = None, toInvert = True, saveFig = None, saveDpi = 300,\
+                   showText = True, color_bar_set_under = (0,0,0,0), vmax=None,\
+                   color_bar_set_over = None, cmapName = 'jet',extent=None,
+                   stick_size = None, title_size = None):
+    data = matIn.copy()
+    my_cmap = mpl.cm.get_cmap(cmapName) 
+    if not color_bar_set_under is None:
+        my_cmap.set_under(color_bar_set_under)
+    if not color_bar_set_over is None:
+        my_cmap.set_over(color_bar_set_over)
+    x_start = 0
+    x_end = matIn.shape[1]
+    y_start = 0
+    y_end = matIn.shape[0]
+    size_x = matIn.shape[1]
+    size_y = matIn.shape[0]
+    if extent is None:
+        extent = [x_start, x_end, y_start, y_end]
+#    print 'extent:',extent
+    # The normal figure
+    fig = plt.figure(figsize=figSize)
+    ax = fig.add_subplot(111)
+    #im = ax.imshow(data, extent=extent, origin='lower', interpolation='None', cmap='viridis')
+    im = ax.imshow(data, extent=extent, origin='lower', interpolation='None', cmap=my_cmap, vmin = vmin, vmax=vmax)
+
+    # Add the text
+    jump_x = (x_end - x_start) / (size_x)
+    jump_y = (y_end - y_start) / (size_y)
+    x_positions = np.linspace(start=x_start, stop=x_end, num=size_x, endpoint=False) - 0.5
+    y_positions = np.linspace(start=y_start, stop=y_end, num=size_y, endpoint=False) - 0.5
     
+    if showText:
+        for y_index, y in enumerate(y_positions):
+            for x_index, x in enumerate(x_positions):
+    #             if y_index > data.shape[0] - 1 or x_index > data.shape[1] - 1:
+    #                 continue
+                label = precision %data[y_index, x_index]
+                text_x = x + jump_x
+                text_y = y + jump_y
+    #             if data[y_index, x_index] > 0:
+    #                 print text_x, text_y, label
+                if data[y_index, x_index] < vmin:
+                    fontColor = 'white'
+                elif data[y_index, x_index] < 0:
+    #                 fontColor = im.cmap(np.abs(data[x_index, y_index]/data.max()))                
+    #                 print label,np.abs(data[y_index, x_index]/data.max()),fontColor
+                    r,g,b,a = im.cmap(np.abs(data[y_index, x_index]/data.max()))        
+                    fontColor = (1. - r, 1. - g, 1. - b, a)
+                else:
+                    r,g,b,a = im.cmap(data[y_index, x_index]/data.max())
+                    fontColor = (1. - r, 1. - g, 1. - b, a)
+    #                 fontColor = im.cmap(1 - data[y_index, x_index]/data.max())
+                ax.text(text_x, text_y, label, color=fontColor, ha='center', va='center', fontsize=fontsize )
+
+    cax = fig.colorbar(im)
+    if not colorBarTitle is None:
+        cax.set_label(colorBarTitle)
+    if not xticks is None:
+        ax.set_xticks(xticks)
+    else:
+        xstic = range(x_start,x_end)
+        ax.set_xticks(np.array(xstic) + 0.5)
+    if not xtickLabels is None:
+        ax.set_xticklabels(xtickLabels)
+    else:
+        xstic = range(x_start,x_end)
+        ax.set_xticklabels(np.array(xstic)+1)
+    if not xtitle is None:
+        if title_size:
+            plt.xlabel(xtitle, fontsize = title_size)
+        else:
+            plt.xlabel(xtitle)
+    if not ytitle is None:
+        if title_size:
+            plt.ylabel(ytitle, fontsize = title_size)
+        else:
+            plt.ylabel(ytitle)
+    #ax.set_xlabel(keyName)  
+    if not yticks is None:
+        ax.set_yticks(yticks)
+    else:
+        y_tick = range(y_start,y_end)
+        ax.set_yticks(np.array(y_tick) + 0.5)  
+    if not ytickLabels is None:
+        ax.set_yticklabels(ytickLabels)
+    else:
+        y_tick = range(y_start,y_end)
+        ax.set_yticklabels(np.array(y_tick)+1)
+    if not stick_size is None:
+        for item in ax.get_xticklabels() + ax.get_yticklabels() + cax.ax.get_yticklabels():
+            item.set_fontsize(stick_size)
+    if not xlim is None:
+        plt.xlim(xlim)
+    if not ylim is None:
+        plt.ylim(ylim)
+    if toInvert:
+        plt.gca().invert_yaxis()
+    if saveFig:
+        plt.savefig(saveFig,dpi=saveDpi)
+    plt.show()    
     

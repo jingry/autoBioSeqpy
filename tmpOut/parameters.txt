@@ -1,27 +1,27 @@
---dataType dna dna
---dataEncodingType onehot onehot
---spcLen 30 40
+--dataType protein other
+--dataEncodingType dict other
+--spcLen 1500 1500
 --firstKernelSize 
---dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
+--dataTrainFilePaths examples/T3T4/dataset/trainT3.txt examples/T3T4/dataset/trainT4.txt examples/T3T4/feature/trainT3_AAC_DC.txt examples/T3T4/feature/trainT4_AAC_DC.txt
 --dataTrainLabel 1 0 1 0
---dataTestFilePaths 
---dataTestLabel 
+--dataTestFilePaths examples/T3T4/dataset/testT3.txt examples/T3T4/dataset/testT4.txt examples/T3T4/feature/testT3_AAC_DC.txt examples/T3T4/feature/testT4_AAC_DC.txt
+--dataTestLabel 1 0 1 0
 --dataTrainModelInd 0 0 1 1
---dataTestModelInd 
+--dataTestModelInd 0 0 1 1
 --outSaveFolderPath tmpOut
---showFig False
+--showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale 0.8
---modelLoadFile examples/CRISPRCas9guideefficiency/model/tmp2D.py examples/CRISPRCas9guideefficiency/model/tmp2D2mer.py
+--dataSplitScale None
+--modelLoadFile examples/T3T4/model/RNN1.py examples/T3T4/model/Dense1.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
 --batch_size 25
 --epochs 40
---useKMer False True
---KMerNum 0 2
+--useKMer 
+--KMerNum 
 --inputLength 
 --loss binary_crossentropy
 --optimizer optimizers.Adam()
