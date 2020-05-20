@@ -2,9 +2,9 @@
 --dataEncodingType dict
 --spcLen 100
 --firstKernelSize 
---dataTrainFilePaths examples/typeIIIsecretedeffectors/data/train_pos.txt examples/typeIIIsecretedeffectors/data/train_neg.txt
+--dataTrainFilePaths examples/typeIII_secreted_effectors_prediction/data/train_pos.txt examples/typeIII_secreted_effectors_prediction/data/train_neg.txt
 --dataTrainLabel 1 0
---dataTestFilePaths examples/typeIIIsecretedeffectors/data/test_pos.txt examples/typeIIIsecretedeffectors/data/test_neg.txt
+--dataTestFilePaths examples/typeIII_secreted_effectors_prediction/data/test_pos.txt examples/typeIII_secreted_effectors_prediction/data/test_neg.txt
 --dataTestLabel 1 0
 --outSaveFolderPath tmpOut
 --showFig True
@@ -12,7 +12,7 @@
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/typeIIIsecretedeffectors/model/protein_biLSTM_model.py
+--modelLoadFile examples/typeIII_secreted_effectors_prediction/model/protein_CNN_model.py
 --weightLoadFile None
 --shuffleDataTrain True
 --shuffleDataTest False

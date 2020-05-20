@@ -6,7 +6,7 @@ import keras
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
-
+from sklearn.metrics import auc
 
 class LossHistory(keras.callbacks.Callback):
     def on_train_begin(self,logs={}):
@@ -46,23 +46,25 @@ class LossHistory(keras.callbacks.Callback):
             if showFig:
                 plt.show()
 
-def plotROC(test,score, auc=None, savePath = None, showFig = True, **kwargs):
+def plotROC(test,score, savePath = None, showFig = True, **kwargs):
     fpr,tpr,threshold = roc_curve(test, score)
+    auc_roc = auc(fpr,tpr)
     plt.figure()
+    font = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 22,
+         }
     lw = 3
-    plt.figure(figsize=(10,10))
-    if auc is None:
-        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve')
-    else:
-        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %auc)
+    plt.figure(figsize=(8,8))
+    plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %auc_roc)
+#    if aucVal is None:
+#        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve')
+#    else:
+#        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %aucVal)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.tick_params(labelsize=18)
-    font = {'family': 'Times New Roman',
-         'weight': 'normal',
-         'size': 20,
-         }
+    plt.tick_params(labelsize=20)
     plt.xlabel('False Positive Rate',font)
     plt.ylabel('True Positive Rate',font)
     plt.title('Receiver operating characteristic curve',font)
@@ -75,21 +77,22 @@ def plotROC(test,score, auc=None, savePath = None, showFig = True, **kwargs):
 
 def plotPR(test,score,savePath = None, showFig = True, **kwargs):
     precision, recall, thresholds = precision_recall_curve(test, score)
+    pr_auc = auc(recall,precision)
     plt.figure()
     lw = 3
-    plt.figure(figsize=(10,10))
-    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve')
+    font = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 22,
+         }
+    plt.figure(figsize=(8,8))
+    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve (area = %0.2f)' %pr_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.tick_params(labelsize=18)
-    font = {'family': 'Times New Roman',
-         'weight': 'normal',
-         'size': 20,
-         }
+    plt.tick_params(labelsize=20)
     plt.xlabel('Recall',font)
     plt.ylabel('Precision',font)
-    plt.title('Precision recallcurve',font)
+    plt.title('Precision recall curve',font)
     plt.legend(loc="lower right")
     if not savePath is None:
         plt.savefig(savePath, **kwargs)

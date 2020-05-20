@@ -297,8 +297,8 @@ if not labelToMat:
     print("Recall: %f "%recall_score(testLabelArr,prediction))
     print("Pre: %f "%precision_score(testLabelArr,prediction))
     print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
-    print("AUC: %f "%roc_auc_score(testLabelArr,prediction))
-    auc = roc_auc_score(testLabelArr,prediction)
+    print("AUC: %f "%roc_auc_score(testLabelArr,predicted_Probability))
+#    auc = roc_auc_score(testLabelArr,predicted_Probability)
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
@@ -339,7 +339,8 @@ if savePrediction:
             FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
             FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
             FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
-            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
+#            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,predicted_Probability,average=None))
+            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,predicted_Probability))
 if not labelToMat:
     tmpFigSavePath = None
     if showFig:  
@@ -349,7 +350,7 @@ if not labelToMat:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'roc.pdf'
         if verbose:
             print('Saving figure recording ROC curve at %s' %tmpFigSavePath)        
-    analysisPlot.plotROC(testLabelArr,predicted_Probability,auc=auc,showFig=showFig,savePath=tmpFigSavePath)
+    analysisPlot.plotROC(testLabelArr,predicted_Probability,showFig=showFig,savePath=tmpFigSavePath)
     if saveFig:
         tmpFigSavePath = outSaveFolderPath + os.path.sep + 'pr.pdf'
         if verbose:
