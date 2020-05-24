@@ -297,7 +297,7 @@ if not labelToMat:
     print("Recall: %f "%recall_score(testLabelArr,prediction))
     print("Pre: %f "%precision_score(testLabelArr,prediction))
     print("MCC: %f "%matthews_corrcoef(testLabelArr,prediction))
-    print("AUC: %f "%roc_auc_score(testLabelArr,predicted_Probability))
+#    print("AUC: %f "%roc_auc_score(testLabelArr,predicted_Probability))
 #    auc = roc_auc_score(testLabelArr,predicted_Probability)
 
 if savePrediction:
@@ -339,8 +339,7 @@ if savePrediction:
             FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
             FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
             FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
-#            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,predicted_Probability,average=None))
-            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,predicted_Probability))
+#            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,predicted_Probability))
 if not labelToMat:
     tmpFigSavePath = None
     if showFig:  
