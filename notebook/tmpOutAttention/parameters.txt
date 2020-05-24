@@ -1,0 +1,38 @@
+--dataType protein
+--dataEncodingType dict
+--spcLen 2000
+--firstKernelSize 
+--dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
+--dataTrainLabel 0 1 2 3 4 5
+--dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
+--dataTestLabel 0 1 2 3 4 5
+--dataTrainModelInd 
+--dataTestModelInd 
+--outSaveFolderPath tmpOut
+--showFig True
+--saveFig True
+--figDPI 300
+--savePrediction True
+--dataSplitScale None
+--modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model_bi_att.py
+--weightLoadFile 
+--shuffleDataTrain True
+--shuffleDataTest False
+--batch_size 40
+--epochs 50
+--useKMer 
+--KMerNum 
+--inputLength 
+--loss binary_crossentropy
+--optimizer optimizers.Adam()
+--metrics acc
+--modelSaveName tmpMod.json
+--weightSaveName tmpWeight.bin
+--noGPU False
+--paraFile None
+--paraSaveName parameters.txt
+--seed 1
+--labelToMat True
+--colorText Auto
+--verbose True
+--reshapeSize 

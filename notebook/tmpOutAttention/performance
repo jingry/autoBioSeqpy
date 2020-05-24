@@ -1,0 +1,9 @@
+Confusion Matrix:
+23	0	1	0	0	1	
+0	26	2	0	1	0	
+0	0	28	0	0	0	
+0	2	16	4	0	0	
+0	1	0	0	34	0	
+5	1	5	0	1	21	
+Predicting Performance:
+ACC: 0.790698 

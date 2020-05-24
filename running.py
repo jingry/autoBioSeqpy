@@ -664,7 +664,7 @@ if not labelToMat:
     td.printC("Recall: %f "%recall_score(testLabelArr,prediction),'B')
     td.printC("Pre: %f "%precision_score(testLabelArr,prediction),'B')
     td.printC("MCC: %f "%matthews_corrcoef(testLabelArr,prediction),'B')
-    td.printC("AUC: %f "%roc_auc_score(testLabelArr,prediction),'B')
+#    td.printC("AUC: %f "%roc_auc_score(testLabelArr,prediction),'B')
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
@@ -695,7 +695,7 @@ if savePrediction:
             FIDO.write(tmpStr)
     tmpCMPath = outSaveFolderPath + os.path.sep + 'performance'
     if verbose:
-        td.printC('Saving confusion matrix and predicting performance at %s' %tmpPredictSavePath,'g')
+        td.printC('Saving confusion matrix and predicting performance at %s' %tmpCMPath,'g')
     with open(tmpCMPath, 'w') as FIDO:
         FIDO.write('Confusion Matrix:\n')
         for i in range(cm.shape[0]):
@@ -711,7 +711,7 @@ if savePrediction:
             FIDO.write("Recall: %f \n"%recall_score(testLabelArr,prediction))
             FIDO.write("Pre: %f \n"%precision_score(testLabelArr,prediction))
             FIDO.write("MCC: %f \n"%matthews_corrcoef(testLabelArr,prediction))
-            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
+#            FIDO.write("AUC: %f \n"%roc_auc_score(testLabelArr,prediction))
 if not labelToMat:
     tmpFigSavePath = None
     if showFig:  

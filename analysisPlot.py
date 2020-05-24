@@ -7,7 +7,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import auc
+
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class LossHistory(keras.callbacks.Callback):
     def on_train_begin(self,logs={}):
@@ -49,18 +52,23 @@ class LossHistory(keras.callbacks.Callback):
 
 def plotROC(test,score, savePath = None, showFig = True, **kwargs):
     fpr,tpr,threshold = roc_curve(test, score)
+    auc_roc = auc(fpr,tpr)
     plt.figure()
+    font = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 22,
+         }
     lw = 3
-    plt.figure(figsize=(10,10))
-    plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)')
+    plt.figure(figsize=(8,8))
+    plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %auc_roc)
+#    if aucVal is None:
+#        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve')
+#    else:
+#        plt.plot(fpr, tpr, color='darkorange',lw=lw, label='ROC curve (area = %0.2f)' %aucVal)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.tick_params(labelsize=18)
-    font = {'family': 'Times New Roman',
-         'weight': 'normal',
-         'size': 20,
-         }
+    plt.tick_params(labelsize=20)
     plt.xlabel('False Positive Rate',font)
     plt.ylabel('True Positive Rate',font)
     plt.title('Receiver operating characteristic curve',font)
@@ -71,20 +79,21 @@ def plotROC(test,score, savePath = None, showFig = True, **kwargs):
     if showFig:
         plt.show()
 
-def plotPR(test,score, savePath = None, showFig = True, **kwargs):
+def plotPR(test,score,savePath = None, showFig = True, **kwargs):
     precision, recall, thresholds = precision_recall_curve(test, score)
+    pr_auc = auc(recall,precision)
     plt.figure()
     lw = 3
-    plt.figure(figsize=(10,10))
-    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve (area = %0.2f)')
+    font = {'family': 'Times New Roman',
+         'weight': 'normal',
+         'size': 22,
+         }
+    plt.figure(figsize=(8,8))
+    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve (area = %0.2f)' %pr_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.tick_params(labelsize=18)
-    font = {'family': 'Times New Roman',
-         'weight': 'normal',
-         'size': 20,
-         }
+    plt.tick_params(labelsize=20)
     plt.xlabel('Recall',font)
     plt.ylabel('Precision',font)
     plt.title('Precision recall curve',font)
@@ -102,7 +111,8 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                    ylim = None, toInvert = True, saveFig = None, saveDpi = 300,\
                    showText = True, color_bar_set_under = (0,0,0,0), vmax=None,\
                    color_bar_set_over = None, cmapName = 'jet',extent=None,
-                   stick_size = None, title_size = None):
+                   stick_size = None, title_size = None, norm=None, 
+                   driverCaxSize=0.05, driverCaxPad=0.05):
     data = matIn.copy()
     my_cmap = mpl.cm.get_cmap(cmapName) 
     if not color_bar_set_under is None:
@@ -122,7 +132,10 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
     fig = plt.figure(figsize=figSize)
     ax = fig.add_subplot(111)
     #im = ax.imshow(data, extent=extent, origin='lower', interpolation='None', cmap='viridis')
-    im = ax.imshow(data, extent=extent, origin='lower', interpolation='None', cmap=my_cmap, vmin = vmin, vmax=vmax)
+    
+
+    
+    im = ax.imshow(data, extent=extent, origin='lower', interpolation='None', cmap=my_cmap, vmin = vmin, vmax=vmax, norm=norm)
 
     # Add the text
     jump_x = (x_end - x_start) / (size_x)
@@ -152,8 +165,11 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                     fontColor = (1. - r, 1. - g, 1. - b, a)
     #                 fontColor = im.cmap(1 - data[y_index, x_index]/data.max())
                 ax.text(text_x, text_y, label, color=fontColor, ha='center', va='center', fontsize=fontsize )
-
-    cax = fig.colorbar(im)
+    
+    
+    divider = make_axes_locatable(ax)
+    caxDriver = divider.append_axes("right", size=driverCaxSize, pad=driverCaxPad)
+    cax = fig.colorbar(im,cax = caxDriver)
     if not colorBarTitle is None:
         cax.set_label(colorBarTitle)
     if not xticks is None:
