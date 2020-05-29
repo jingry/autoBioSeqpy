@@ -2,28 +2,28 @@
 --dataEncodingType dict
 --spcLen 2000
 --firstKernelSize 
---dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
---dataTrainLabel 0 1 2 3 4 5
---dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
---dataTestLabel 0 1 2 3 4 5
+--dataTrainFilePaths ./examples/deeploc_data/data//Cell.membrane_train.fasta ./examples/deeploc_data/data//Cytoplasm_train.fasta ./examples/deeploc_data/data//Endoplasmic.reticulum_train.fasta ./examples/deeploc_data/data//Extracellular_train.fasta ./examples/deeploc_data/data//Golgi.apparatus_train.fasta ./examples/deeploc_data/data//Lysosome_Vacuole_train.fasta ./examples/deeploc_data/data//Mitochondrion_train.fasta ./examples/deeploc_data/data//Nucleus_train.fasta ./examples/deeploc_data/data//Peroxisome_train.fasta ./examples/deeploc_data/data//Plastid_train.fasta
+--dataTrainLabel 0 1 2 3 4 5 6 7 8 9
+--dataTestFilePaths ./examples/deeploc_data/data//Cell.membrane_test.fasta ./examples/deeploc_data/data//Cytoplasm_test.fasta ./examples/deeploc_data/data//Endoplasmic.reticulum_test.fasta ./examples/deeploc_data/data//Extracellular_test.fasta ./examples/deeploc_data/data//Golgi.apparatus_test.fasta ./examples/deeploc_data/data//Lysosome_Vacuole_test.fasta ./examples/deeploc_data/data//Mitochondrion_test.fasta ./examples/deeploc_data/data//Nucleus_test.fasta ./examples/deeploc_data/data//Peroxisome_test.fasta ./examples/deeploc_data/data//Plastid_test.fasta
+--dataTestLabel 0 1 2 3 4 5 6 7 8 9
 --dataTrainModelInd 
 --dataTestModelInd 
---outSaveFolderPath tmpOut
+--outSaveFolderPath tmpOut_2000
 --showFig True
 --saveFig True
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model_bi_att.py
+--modelLoadFile examples/deeploc_data/model/protein_CNN1D+GlobalMaxPooling_model_bi_att.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 40
+--batch_size 128
 --epochs 50
 --useKMer 
 --KMerNum 
 --inputLength 
---loss binary_crossentropy
+--loss categorical_crossentropy
 --optimizer optimizers.Adam()
 --metrics acc
 --modelSaveName tmpMod.json

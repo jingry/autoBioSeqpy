@@ -82,7 +82,13 @@ def evalStrList(listIn,sep=','):
     tmp = re.sub('\]\,+\]',']]',tmp)#],] -> ]]
     return eval(tmp)
     
-    
+def mergeDict(dicts):
+    dictOut = {}
+    for subDict in dicts:
+        for k in subDict:
+            dictOut[k] = subDict[k]
+    return dictOut
+
 if __name__ == "__main__":
     #print(bcolors.WARNING + "Warning: No active frommets remain. Continue?" + bcolors.ENDC)
 #    print(Bcolors.HEADER + "HEADER: No active frommets remain. Continue?" + bcolors.ENDC)

@@ -11,6 +11,7 @@ import importlib
 import sys,os,re
 #import keras.callbacks
 from keras import optimizers
+import tensorflow as tf
 from keras.models import model_from_json
 import keras
 import numpy as np
@@ -105,11 +106,14 @@ def getModelFromJsonFile(jsonFile,weightFile = None, input_length = None, loss =
 #    model.summary()
     return model
 
-def readModelFromJsonFileDirectly(jsonFile,weightFile=None):
+def readModelFromJsonFileDirectly(jsonFile,weightFile=None,custom_objects=None):
     json_file = open(jsonFile, 'r')
     loaded_model_json = json_file.read()
     json_file.close()
-    loaded_model = model_from_json(loaded_model_json)
+#    if custom_objects is None:
+#        loaded_model = model_from_json(loaded_model_json)
+#    else:
+    loaded_model = model_from_json(loaded_model_json, custom_objects=custom_objects)
     if not weightFile is None:
         # load weights into new model
         loaded_model.load_weights(weightFile)
@@ -125,7 +129,19 @@ def readModelFromPyFileDirectly(pyFilePath, weightFile=None):
         model.load_weights(weightFile)
     return model
 
-def modifyModelFirstKernelSize(model, firstKernelSize, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc']):
+def getCustomObjects(pyFilePath):
+    (folderPath, fileName) = os.path.split(pyFilePath)
+    moduleName = re.sub('\.[^\.]+$','',fileName)
+    sys.path.append(folderPath)
+    obj=importlib.import_module(moduleName)
+#    model = obj.model
+    custom_objects = None
+    if 'custom_objects' in dir(obj):
+        custom_objects=obj.custom_objects
+    return custom_objects
+
+
+def modifyModelFirstKernelSize(model, firstKernelSize, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc'], custom_objects=None):
     '''
     Changing the kernel size of the first layer. Since the shape of input dataset might be not fit for the first layer,
     this function is added to modify the size of the built model before compiling.
@@ -139,7 +155,7 @@ def modifyModelFirstKernelSize(model, firstKernelSize, loss = 'binary_crossentro
         if 'kernel_size' in dir(subLayer):
             subLayer.kernel_size = firstKernelSize
             break
-    model = model_from_json(model.to_json())
+    model = model_from_json(model.to_json(), custom_objects=custom_objects)
     model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
     return model
 
@@ -266,7 +282,7 @@ def reshapeSingleModelLayer(model,dataMat,reshapeSize=None,verbose=False,td=td):
     newModel.add(model)
     return newModel
     
-def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', reshapeSizes=None, verbose=False, td=td):
+def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', reshapeSizes=None, verbose=False, td=td, custom_objects=None):
     dataLabel = np.array(label)
     outputs = [None] * len(models)
     inputs = [None] * len(models)
@@ -364,7 +380,7 @@ def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', re
 #            nameSet.add(model.input.name)
 #            changed = True
         if changed:
-            newModel = model_from_json(model.to_json())
+            newModel = model_from_json(model.to_json(), custom_objects=custom_objects)
             for layer in newModel.layers:
                 try:
                     layer.set_weights(model.get_layer(name=layer.name).get_weights())
@@ -501,18 +517,20 @@ def modelMergeByAddReshapLayer_old(models, dataMats, activation='sigmoid', resha
     modelOut = keras.models.Model(inputs=inputs,outputs=out)
     return modelOut
 
-def modifyInputLengths(models,inputLengths,layerNum=0,verbose=False,td=td):
+def modifyInputLengths(models, inputLengths, layerNum=0, verbose=False, td=td, custom_objects=None):
     for i,model in enumerate(models):
         input_length = inputLengths[i]
         subLayer = model.layers[layerNum]
         if not input_length is None:
+            print(subLayer.name,subLayer.input_shape, dir(subLayer))
             if 'input_length' in dir(subLayer):
+                print(subLayer.input_length , input_length)
                 if not subLayer.input_length == input_length:
                     if verbose:
                         td.printC('The input_length is not consistent with datashape, will be changed','b')
                     subLayer.input_length = input_length
                     subLayer.batch_input_shape = (None,input_length)
-                    newModel = model_from_json(model.to_json())
+                    newModel = model_from_json(model.to_json(), custom_objects=custom_objects)
                     if verbose:
                         td.printC('The input_length is changed, will trying to load the weights if possible (note that few layers might failed since the input_length was changed)','b')
                     for layer in newModel.layers:
@@ -539,5 +557,8 @@ def modifyFirstKenelSizeDirectly(model,firstKernelSize):
             break
         
 def modelCompile(model, loss = 'binary_crossentropy', optimizer = 'optimizers.Adam()', metrics = ['acc']):
-    model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
+    try:
+        model.compile(loss = loss,optimizer = eval(optimizer),metrics = metrics)
+    except:
+        model.compile(loss = loss,optimizer = eval('tf.keras.'+optimizer),metrics = metrics)
 #    return model

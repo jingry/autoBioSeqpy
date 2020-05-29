@@ -47,7 +47,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
 import tensorflow as tf
 import keras
-from utils import TextDecorate, evalStrList
+from utils import TextDecorate, evalStrList, mergeDict
 td = TextDecorate()
 
 paraDict = paraParser.parseParameters(sys.argv[1:])
@@ -476,6 +476,7 @@ if len(modelLoadFile) < 1:
 assert not len(modelLoadFile) < 1
 
 models = []
+custom_objects_list = []
 if len(weightLoadFile) > 0:
     if verbose:
         td.printC('Weight file provided by users, checking the number which should be the same as the model files.','b')
@@ -488,6 +489,9 @@ for i,subModelFile in enumerate(modelLoadFile):
         weightFile = weightLoadFile[i]
     if subModelFile.endswith('.py'):
         model = moduleRead.readModelFromPyFileDirectly(subModelFile,weightFile=weightFile)
+        tmpCustom = moduleRead.getCustomObjects(subModelFile)
+        if not tmpCustom is None:
+            custom_objects_list.append(tmpCustom)
     else:
         model = moduleRead.readModelFromJsonFileDirectly(subModelFile,weightFile=weightFile)
     for tmpmode in models:
@@ -496,7 +500,11 @@ for i,subModelFile in enumerate(modelLoadFile):
             model = keras.models.clone_model(tmpmode)
             break
     models.append(model)
-    
+#print(custom_objects_list)
+if len(custom_objects_list) > 0:
+    custom_objects = mergeDict(custom_objects_list)
+else:
+    custom_objects = None
 
 
 
@@ -504,8 +512,9 @@ for i,subModelFile in enumerate(modelLoadFile):
 if len(inputLength) < 1:
     inputLength = []
     for i,trainDataMat in enumerate( trainDataMats ):
-        inputLength.append(trainDataMat.shape[1])        
-moduleRead.modifyInputLengths(models,inputLength,verbose=verbose,td=td)
+        inputLength.append(trainDataMat.shape[1])    
+print(inputLength)
+moduleRead.modifyInputLengths(models,inputLength,verbose=verbose,td=td,custom_objects=custom_objects)
 
 
 
@@ -564,7 +573,7 @@ if len(modelLoadFile) > 1:
     except:
         if verbose:
             td.printC('Merging failed, trying adding reshape layer for the models... ','b')
-        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=reshapeSizes, verbose=verbose, td=td)
+        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=reshapeSizes, verbose=verbose, td=td, custom_objects=custom_objects)
         if verbose:
             td.printC('Merging finished. ','g')
 else:

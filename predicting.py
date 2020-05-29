@@ -35,7 +35,7 @@ import dataProcess
 import numpy as np
 #from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
 import tensorflow as tf
-from utils import TextDecorate, evalStrList
+from utils import TextDecorate, evalStrList, mergeDict
 td = TextDecorate()
 
 paraDictCMD = paraParser.parseParameters(sys.argv[1:])
@@ -281,7 +281,17 @@ assert not weightLoadFile is None
 
 if verbose:
     td.printC('Loading module and weight file','b')
-model = moduleRead.readModelFromJsonFileDirectly(modelPredictFile,weightLoadFile)
+custom_objects_list = []
+for i,subModelFile in enumerate(modelLoadFile):
+    if subModelFile.endswith('.py'):
+        custom_objects_list.append(moduleRead.getCustomObjects(subModelFile))
+
+if len(custom_objects_list) > 0:
+    custom_objects = mergeDict(custom_objects_list)
+else:
+    custom_objects = None
+    
+model = moduleRead.readModelFromJsonFileDirectly(modelPredictFile,weightLoadFile,custom_objects=custom_objects)
 if verbose:
     td.printC('Module loaded, generating the summary of the module','b')
     model.summary()

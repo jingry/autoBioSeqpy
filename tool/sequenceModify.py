@@ -49,7 +49,7 @@ def fixOneSeq(seqIn,fixFrontScale,cutFrontScale,spcLen,paddingRes='X'):
         outSeq = seqIn
     return outSeq
 
-def generateSlideWin(name,seq,winSize,spcLen,dictIn):
+def generateSlideWin(name,seq,winSize,dictIn,stride=1):
     count = 0
     currPos = 0
 #    print(winSize,len(seq))
@@ -61,7 +61,12 @@ def generateSlideWin(name,seq,winSize,spcLen,dictIn):
         subName = name + '_%d' %count
         dictIn[subName] = subSeq
         count += 1
-        currPos += 1
+        currPos += stride
+    #for the tail
+    if currPos -  stride + winSize < len(seq):
+        subSeq = seq[currPos:]
+        subName = name + '_%d' %count
+        dictIn[subName] = subSeq
         
 def printOut(fileOut,dictIn,outLen = 80):
     with open(fileOut,'w') as FIDO:
@@ -88,11 +93,12 @@ Here provide three commonly used actions:
         Additionally, the position of the padding character could be set manually:
             python tool/sequenceModify.py  --fileIn path/to/a/FASTA/file --fileOut path/to/a/text/file --spcLen 60 --slideWinSize 60 --fixFrontScale 0.2
         The command above makes 20% of the padding character in front of the sequence and the rest behind.
-    
+        
     2) cut/add character to make the length consistent:
         This time the usage becomes a bit complex:
             python tool/sequenceModify.py  --fileIn path/to/a/FASTA/file --fileOut path/to/a/text/file --spcLen 60 --toSlide 0 --fixFrontScale 0.2 -cutFrontScale 0.3
         The command above makes the sequences either be cut to 60 residues/bases started at the position of 30% in the sequence, or add padding 20% character 'X' at the head and 80% and the end.
+        
         
     The explaination of the parameters are listed below:
     --paddingRes            character
@@ -148,6 +154,7 @@ def main():
             'slideWinSize' : None,
             'fileOut' : None,
             'fileIn' : None,
+            'stride' : 1,
             }
     
 
@@ -191,7 +198,7 @@ def main():
     if fileIn is None:
         print('Please provide input files for parameter "--fileIn"')
         exit()
-    
+    stride = int(paraDict['stride'])
     
     fastaDict = {}
     fastaFileRead(fileIn,fastaDict)
@@ -223,7 +230,7 @@ def main():
     if toSlide:
         slideDict = {}
         for k in fastaDict:
-            generateSlideWin(k,fastaDict[k],slideWinSize,spcLen,slideDict)
+            generateSlideWin(k,fastaDict[k],slideWinSize,slideDict,stride=stride)
         outDict = {}
         for k in slideDict:
             tmpOut = fixOneSeq(slideDict[k],fixFrontScale,cutFrontScale,spcLen,paddingRes=paddingRes)

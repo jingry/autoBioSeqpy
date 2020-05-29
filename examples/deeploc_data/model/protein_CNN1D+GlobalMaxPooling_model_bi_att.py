@@ -17,7 +17,7 @@ kernel_size = 5
 hidden_dims = 650
 lstm_output_size = 64
 pool_size = 2
-input_length = 2000
+input_length = 400
 
 print('Building model...')
 model = Sequential()
@@ -40,8 +40,8 @@ model.add(Dense(10))
 model.add(Activation('softmax'))
 
 model.compile(loss = 'categorical_crossentropy',optimizer = optimizers.Adam(),metrics = ['acc'])
-model.summary()
-
+#model.summary()
+custom_objects=SeqSelfAttention.get_custom_objects()
 #model = Sequential()
 #model.add(Embedding(max_features, embedding_size, input_length = 2000))
 #model.add(Dropout(0.25))
