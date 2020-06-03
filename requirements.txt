@@ -1,8 +1,16 @@
-#importlib
-sklearn>=0.0.0
-#keras
-#tensorflow
+# Here is a list of the basic package dependency of autoBioSeqpy, using
+#   pip install -r requirements.txt
+# or
+#   pips install -r requirements.txt
+# is enough
+#
+# But we suggest using anaconda to install the such packages, like:
+#   conda install keras
+# or 
+#   conda install keras-gpu
+# for gpu utilization
 
+sklearn>=0.0.0
 
 importlib-metadata>=0.0.0
 Keras>=2.2.4
