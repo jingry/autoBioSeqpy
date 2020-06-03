@@ -112,7 +112,7 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                    showText = True, color_bar_set_under = (0,0,0,0), vmax=None,\
                    color_bar_set_over = None, cmapName = 'jet',extent=None,
                    stick_size = None, title_size = None, norm=None, 
-                   driverCaxSize=0.05, driverCaxPad=0.05):
+                   driverCaxSize=0.05, driverCaxPad=0.05, xtickRotation = None):
     data = matIn.copy()
     my_cmap = mpl.cm.get_cmap(cmapName) 
     if not color_bar_set_under is None:
@@ -182,6 +182,9 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
     else:
         xstic = range(x_start,x_end)
         ax.set_xticklabels(np.array(xstic)+1)
+    if not xtickRotation is None:
+        plt.setp( ax.xaxis.get_majorticklabels(), rotation=xtickRotation )
+
     if not xtitle is None:
         if title_size:
             plt.xlabel(xtitle, fontsize = title_size)

@@ -1,11 +1,11 @@
---dataType protein
---dataEncodingType dict
---spcLen 2000
---firstKernelSize 
---dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
---dataTrainLabel 0 1 2 3 4 5
---dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
---dataTestLabel 0 1 2 3 4 5
+--dataType dna
+--dataEncodingType onehot
+--spcLen 30
+--firstKernelSize 4 5
+--dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
+--dataTrainLabel 1 0
+--dataTestFilePaths 
+--dataTestLabel 
 --dataTrainModelInd 
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
@@ -13,18 +13,18 @@
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale None
---modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model_bi_att.py
+--dataSplitScale 0.8
+--modelLoadFile examples/CRISPRCas9guideefficiency/model/DNA_CNN2D_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 40
---epochs 50
+--batch_size 25
+--epochs 40
 --useKMer 
 --KMerNum 
 --inputLength 
 --loss binary_crossentropy
---optimizer optimizers.Adam()
+--optimizer optimizers.Adam(learning_rate=0.0005)
 --metrics acc
 --modelSaveName tmpMod.json
 --weightSaveName tmpWeight.bin
@@ -32,7 +32,7 @@
 --paraFile None
 --paraSaveName parameters.txt
 --seed 1
---labelToMat True
+--labelToMat False
 --colorText Auto
 --verbose True
 --reshapeSize 

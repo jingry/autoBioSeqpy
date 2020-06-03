@@ -522,9 +522,9 @@ def modifyInputLengths(models, inputLengths, layerNum=0, verbose=False, td=td, c
         input_length = inputLengths[i]
         subLayer = model.layers[layerNum]
         if not input_length is None:
-            print(subLayer.name,subLayer.input_shape, dir(subLayer))
+#            print(subLayer.name,subLayer.input_shape, dir(subLayer))
             if 'input_length' in dir(subLayer):
-                print(subLayer.input_length , input_length)
+#                print(subLayer.input_length , input_length)
                 if not subLayer.input_length == input_length:
                     if verbose:
                         td.printC('The input_length is not consistent with datashape, will be changed','b')

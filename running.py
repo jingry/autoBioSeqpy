@@ -111,7 +111,7 @@ loss = paraDict['loss']
 optimizer = paraDict['optimizer']
 if not optimizer.startswith('optimizers.'):
     optimizer = 'optimizers.' + optimizer
-if not optimizer.endswith('()'):
+if not optimizer.endswith(')'):
     optimizer = optimizer + '()'
 metrics = paraDict['metrics']
 
