@@ -8,8 +8,18 @@ Our tool autoBioSeqpy’ is a self-made python tool which can transfer the seque
 # 2.	Installation 
 All the code of autoBioSeqpy’ is wrote in Python, and no mixture code (e.g. C/C++) is used in this project, so the installation is very easy. Once the dependencies are resolved, the only thing to do is to make the path as a working path or put the code into the search path.
 
+A basic way is using
+
+```pip install -r requirements.txt```
+
+ or
+ 
+```pip3 install -r requirements.txt```
+
+is enough. But if users want to install using anaconda or other way manually, please read the followwing subsections.
+
 ## 2.1 Dependence
-Some python modules are necessary for autoBioSeqpy, which are **re, numpy, importlib, sklearn and keras**. Since all modules are included in **anaconda3**, users could resolve module dependencies by installing anaconda3 (2 is not suggested) on their official website https://www.anaconda.com/. Alternatively, the users can install the module manually, for example using pip or another installer. If using pip to install the dependent modules, the command is:
+Some python modules are necessary for autoBioSeqpy, which are **re, numpy, importlib, matplotlib sklearn and keras**. Since all modules are included in **anaconda3**, users could resolve module dependencies by installing anaconda3 (2 is not suggested) on their official website https://www.anaconda.com/. Alternatively, the users can install the module manually, for example using pip or another installer. If using pip to install the dependent modules, the command is:
 
 ```pip install numpy```
 
