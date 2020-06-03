@@ -17,7 +17,7 @@ Keras>=2.2.4
 Keras-Applications>=1.0.7
 Keras-Preprocessing>=1.0.9
 
-tensorboard==1.14.0
-tensorflow==1.14.0
-tensorflow-estimator==1.14.0
+tensorboard>=1.14.0
+tensorflow>=1.14.0
+tensorflow-estimator>=1.14.0
 matplotlib>=3.0.0
