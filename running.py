@@ -245,6 +245,16 @@ if '2D' in str(model.layers[0].__class__):
         moduleRead.modifyModelFirstKernelSize(model, firstKernelSize)
     
 
+#checking the layer and encoding type
+hasEmbed = False
+for subLayer in model.layers:
+    if 'embed' in subLayer.__class__.__name__.lower():
+        hasEmbed = True
+if dataEncodingType == 'onehot' and hasEmbed:
+    print('Detected onehot encoding with embedding layer used, the combination might not make sence. Please check the usability of the embedding layer.')
+elif dataEncodingType == 'dict' and not hasEmbed:
+    print('Detected dictionary encoding without embedding layer used, the combination might not make sence. Please check the usability of the embedding layer.')
+
 if verbose:
     print('Start training...')
 history = analysisPlot.LossHistory()
