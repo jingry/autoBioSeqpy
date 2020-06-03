@@ -128,6 +128,10 @@ Here provide three commonly used actions:
     --slideWinSize          int:
                             Default: The minimal of the input sequences.
                             The length of the sliding window size.
+                            
+     --stride               int:
+                            Default: 1.
+                            The length to stride when using the sliding window.                       
 
     --fileOut               Path of string
                             No default, should be provided by user
