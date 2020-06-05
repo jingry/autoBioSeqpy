@@ -53,7 +53,7 @@ There are two ways to use autoBioSeqpy, one is to use the script running.py as a
 ### 3.1.1 Training and predict
 If the dependent modules are installed (in section 2.1), a standalone script running.py is available. To test it, just open a command line window (or terminal in Linux) and make the working path (i.e. current folder) to the location of autoBioSeqpy. Then test:
 
-```python running.py –help```
+```python running.py --help```
 
 if the help document is showed without error, it’s available. Users can then perform a shot test: 
 
@@ -86,7 +86,7 @@ Since there are too many parameters to write on the command line, an alternative
 
 This file can then be used in a command line:
 
-`python running.py –paraFile parameters.txt`
+`python running.py --paraFile parameters.txt`
 
 ### 3.1.2 Predict using the built model
 Sometimes users will want to use the built model to predict the new data, and predicting.py is available. Since the data encoding during training depends on the parameters, few parameters are required during training. Using the same example as in section 3.1.1, the command line becomes:
