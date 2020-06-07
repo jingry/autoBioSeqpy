@@ -2,9 +2,9 @@
 --dataEncodingType dict
 --spcLen 2000
 --firstKernelSize 
---dataTrainFilePaths ./examples/deeploc_data/data//Cell.membrane_train.fasta ./examples/deeploc_data/data//Cytoplasm_train.fasta ./examples/deeploc_data/data//Endoplasmic.reticulum_train.fasta ./examples/deeploc_data/data//Extracellular_train.fasta ./examples/deeploc_data/data//Golgi.apparatus_train.fasta ./examples/deeploc_data/data//Lysosome_Vacuole_train.fasta ./examples/deeploc_data/data//Mitochondrion_train.fasta ./examples/deeploc_data/data//Nucleus_train.fasta ./examples/deeploc_data/data//Peroxisome_train.fasta ./examples/deeploc_data/data//Plastid_train.fasta
+--dataTrainFilePaths ./examples/subcellular_localization/data//Cell.membrane_train.fasta ./examples/subcellular_localization/data//Cytoplasm_train.fasta ./examples/subcellular_localization/data//Endoplasmic.reticulum_train.fasta ./examples/subcellular_localization/data//Extracellular_train.fasta ./examples/subcellular_localization/data//Golgi.apparatus_train.fasta ./examples/subcellular_localization/data//Lysosome_Vacuole_train.fasta ./examples/subcellular_localization/data//Mitochondrion_train.fasta ./examples/subcellular_localization/data//Nucleus_train.fasta ./examples/subcellular_localization/data//Peroxisome_train.fasta ./examples/subcellular_localization/data//Plastid_train.fasta
 --dataTrainLabel 0 1 2 3 4 5 6 7 8 9
---dataTestFilePaths ./examples/deeploc_data/data//Cell.membrane_test.fasta ./examples/deeploc_data/data//Cytoplasm_test.fasta ./examples/deeploc_data/data//Endoplasmic.reticulum_test.fasta ./examples/deeploc_data/data//Extracellular_test.fasta ./examples/deeploc_data/data//Golgi.apparatus_test.fasta ./examples/deeploc_data/data//Lysosome_Vacuole_test.fasta ./examples/deeploc_data/data//Mitochondrion_test.fasta ./examples/deeploc_data/data//Nucleus_test.fasta ./examples/deeploc_data/data//Peroxisome_test.fasta ./examples/deeploc_data/data//Plastid_test.fasta
+--dataTestFilePaths ./examples/subcellular_localization/data//Cell.membrane_test.fasta ./examples/subcellular_localization/data//Cytoplasm_test.fasta ./examples/subcellular_localization/data//Endoplasmic.reticulum_test.fasta ./examples/subcellular_localization/data//Extracellular_test.fasta ./examples/subcellular_localization/data//Golgi.apparatus_test.fasta ./examples/subcellular_localization/data//Lysosome_Vacuole_test.fasta ./examples/subcellular_localization/data//Mitochondrion_test.fasta ./examples/subcellular_localization/data//Nucleus_test.fasta ./examples/subcellular_localization/data//Peroxisome_test.fasta ./examples/subcellular_localization/data//Plastid_test.fasta
 --dataTestLabel 0 1 2 3 4 5 6 7 8 9
 --dataTrainModelInd 
 --dataTestModelInd 
@@ -14,7 +14,7 @@
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/deeploc_data/model/protein_CNN1D+GlobalMaxPooling_model_bi_att.py
+--modelLoadFile examples/subcellular_localization/model/protein_CNN1D+MaxPooling_bi_att.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
