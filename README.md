@@ -1,3 +1,4 @@
+![image](https://github.com/jingry/autoBioSeqpy/blob/master/logo.jpg)
 # autoBioSeqpy
 a deep learning tool for the classification of biological sequences
 
