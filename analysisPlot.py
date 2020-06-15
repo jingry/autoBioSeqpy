@@ -112,7 +112,8 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                    showText = True, color_bar_set_under = (0,0,0,0), vmax=None,\
                    color_bar_set_over = None, cmapName = 'jet',extent=None,
                    stick_size = None, title_size = None, norm=None, 
-                   driverCaxSize=0.05, driverCaxPad=0.05, xtickRotation = None):
+                   driverCaxSize=0.05, driverCaxPad=0.05, xtickRotation = None,
+                   showFig = True):
     data = matIn.copy()
     my_cmap = mpl.cm.get_cmap(cmapName) 
     if not color_bar_set_under is None:
@@ -217,5 +218,6 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
         plt.gca().invert_yaxis()
     if saveFig:
         plt.savefig(saveFig,dpi=saveDpi)
-    plt.show()    
+    if showFig:
+        plt.show()    
     
