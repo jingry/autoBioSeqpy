@@ -154,6 +154,7 @@ with open(fileIn) as FID:
         index2 = int(index2)
         out1, out2 = eles[2].split(subSep)
         probDiff = float(eles[3])
+#        print(line)
         if index1 == oriIndex:
             position, oriRes, mutatedRes = re.findall('(\d+)_(\w)-(\w)',name2.split('###')[1])[0]
             position = int(position)
