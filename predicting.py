@@ -284,9 +284,12 @@ if verbose:
 custom_objects_list = []
 for i,subModelFile in enumerate(modelLoadFile):
     if subModelFile.endswith('.py'):
-        custom_objects_list.append(moduleRead.getCustomObjects(subModelFile))
+        tmpObj = moduleRead.getCustomObjects(subModelFile)
+        if not tmpObj is None:
+            custom_objects_list.append(tmpObj)
 
 if len(custom_objects_list) > 0:
+    print(custom_objects_list)
     custom_objects = mergeDict(custom_objects_list)
 else:
     custom_objects = None
