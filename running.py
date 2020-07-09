@@ -513,7 +513,7 @@ if len(inputLength) < 1:
     inputLength = []
     for i,trainDataMat in enumerate( trainDataMats ):
         inputLength.append(trainDataMat.shape[1])    
-print(inputLength)
+#print(inputLength)
 moduleRead.modifyInputLengths(models,inputLength,verbose=verbose,td=td,custom_objects=custom_objects)
 
 

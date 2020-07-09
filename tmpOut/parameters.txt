@@ -1,11 +1,11 @@
---dataType dna
---dataEncodingType onehot
---spcLen 30
+--dataType protein
+--dataEncodingType dict
+--spcLen 100
 --firstKernelSize 
---dataTrainFilePaths examples/CRISPRCas9guideefficiency/data/Doench_high_activity_sgRNA.txt examples/CRISPRCas9guideefficiency/data/Doench_low_activity_sgRNA.txt
+--dataTrainFilePaths examples/typeIII_secreted_effectors_prediction/data/train_pos.txt examples/typeIII_secreted_effectors_prediction/data/train_neg.txt
 --dataTrainLabel 1 0
---dataTestFilePaths 
---dataTestLabel 
+--dataTestFilePaths examples/typeIII_secreted_effectors_prediction/data/test_pos.txt examples/typeIII_secreted_effectors_prediction/data/test_neg.txt
+--dataTestLabel 1 0
 --dataTrainModelInd 
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
@@ -13,13 +13,13 @@
 --saveFig True
 --figDPI 300
 --savePrediction True
---dataSplitScale 0.8
---modelLoadFile examples/CRISPRCas9guideefficiency/model/DNA_CNN2D_model.py
+--dataSplitScale None
+--modelLoadFile examples/typeIII_secreted_effectors_prediction/model/protein_biLSTM_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 25
---epochs 40
+--batch_size 60
+--epochs 20
 --useKMer 
 --KMerNum 
 --inputLength 
