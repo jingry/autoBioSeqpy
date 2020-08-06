@@ -1,11 +1,11 @@
 --dataType protein
 --dataEncodingType dict
---spcLen 100
+--spcLen 2000
 --firstKernelSize 
---dataTrainFilePaths examples/typeIII_secreted_effectors_prediction/data/train_pos.txt examples/typeIII_secreted_effectors_prediction/data/train_neg.txt
---dataTrainLabel 1 0
---dataTestFilePaths examples/typeIII_secreted_effectors_prediction/data/test_pos.txt examples/typeIII_secreted_effectors_prediction/data/test_neg.txt
---dataTestLabel 1 0
+--dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
+--dataTrainLabel 0 1 2 3 4 5
+--dataTestFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_test.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_test.txt
+--dataTestLabel 0 1 2 3 4 5
 --dataTrainModelInd 
 --dataTestModelInd 
 --outSaveFolderPath tmpOut
@@ -14,12 +14,12 @@
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/typeIII_secreted_effectors_prediction/model/protein_biLSTM_model.py
+--modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 60
---epochs 20
+--batch_size 40
+--epochs 50
 --useKMer 
 --KMerNum 
 --inputLength 
@@ -32,7 +32,7 @@
 --paraFile None
 --paraSaveName parameters.txt
 --seed 1
---labelToMat False
+--labelToMat True
 --colorText Auto
 --verbose True
 --reshapeSize 

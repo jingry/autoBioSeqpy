@@ -43,6 +43,22 @@ If grid search used, the plots will be save in a pdf with multiple pages.
 
 Currently, the layer ranked at the last 2 will be used for plotting, users could use --layerIndex to change it. But please note that not all the layer is able to be used, please see the jupyter notebook for more details.
 
+Another selection for specify the layer is using --interactive 1 and following the questions to decide the layer name or index.
+
+To change the color, please use --theme or the --color_key_cmap and --background. NOTE that if --theme used, the --color_key_cmap and --background will not used for plotting.
+options available for --theme:        
+       * 'blue'
+       * 'red'
+       * 'green'
+       * 'inferno'
+       * 'fire'
+       * 'viridis'
+       * 'darkblue'
+       * 'darkred'
+       * 'darkgreen'
+The parameter for --color_key_cmap is following matplotlib, please see https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html for details.
+The parameter for --background could be a simple 'black' or 'white', but could be other color obeying the rule of matplotlib.
+
 NOTE: This script is to plot the model layers using UMAP, currently only n_neighbor and min_dist are able to be modified, if users want to use more features of UMAP or integrate this script into other work, please use our jupyter notebook (in the folder "notebook") as a template.
 '''
 import paraParser
@@ -76,6 +92,15 @@ defaultParaDict['layerIndex'] = -2
 defaultParaDict['figWidth'] = 800
 defaultParaDict['figHeight'] = 800
 defaultParaDict['outFigFolder'] = None
+defaultParaDict['metric'] = 'euclidean'
+defaultParaDict['color_key_cmap'] = 'rainbow'
+defaultParaDict['background'] = 'white'
+defaultParaDict['theme'] = None
+defaultParaDict['color_key_cmap'] = 'rainbow'
+defaultParaDict['background'] = 'white'
+defaultParaDict['interactive'] = False
+
+
 #numSet.add('grid_min_dist')
 #intSet.add('grid_n_neighbors')
 numSet.add('min_dist')
@@ -83,6 +108,7 @@ intSet.add('n_neighbors')
 intSet.add('layerIndex')
 intSet.add('figWidth')
 intSet.add('figHeight')
+boolSet.add('interactive')
 
 paraDictCMD = paraParser.parseParameters(sys.argv[1:],defaultParaTuple=(defaultParaDict, numSet, intSet, boolSet, objSet))
 paraFile = paraDictCMD['paraFile']
@@ -138,6 +164,8 @@ outSaveFolderPath = paraDict['outSaveFolderPath']
 showFig = paraDict['showFig']
 saveFig = paraDict['saveFig']
 savePrediction = paraDict['savePrediction']
+
+interactive = paraDict['interactive']
 
 loss = paraDict['loss']
 optimizer = paraDict['optimizer']
@@ -211,22 +239,45 @@ def generateNewModelFromLayers(layers):
         newModel.add(layer)
     return newModel
 
-def genrerateNewModelFromModel(oriModel, selectedLayerIndex = -2, td = td):
+def genrerateNewModelFromModel(oriModel, selectedLayerIndex = -2, td = td, interactive=False):
     isConcatenate, hasSequential, avaiLayerIndex = analAvaiLayers(oriModel)
-    
+    # print(selectedLayerIndex)
     layerIndexFix = selectedLayerIndex
     if layerIndexFix < 0:
         layerIndexFix = layerIndexFix + len(avaiLayerIndex)
     if layerIndexFix < 0 or layerIndexFix > len(avaiLayerIndex) - 1:
         td.printC('Only %d layers could be used to generating UMAP, but the index %d is out of the range.' %(len(analAvaiLayers),selectedLayerIndex),'r')
-    if isConcatenate:
-        newModel = Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
-    else:
+    
+    if interactive:
+        td.printC('Since interactive is set as True, few operations will be decided by users:','b')
         if hasSequential:
-            upackedLayers = unBoundLayers(oriModel)
-            newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex])
+            td.printC('A sequential model detected in the current model, the index model is suggested.','p')
+        useName = input('Using index (e.g. an integer such as 0,1,2,...) or the name printed above?\n0 for index and 1 for name:')
+        while not (useName == '0' or useName == '1'):
+            useName = input('type 0 or 1:')
+        if useName == '1':
+            td.printC('The names of the layers:','b')
+            for layer in oriModel.layers:
+                td.printC(layer.name,'B')
+            layerName = input('Please provide the layer name:')
+            newModel = Model(inputs=oriModel.input,outputs=oriModel.get_layer(layerName).output)
         else:
-            newModel=Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
+            td.printC('The names and indexes of the layers:','b')
+            upackedLayers = unBoundLayers(oriModel)
+            for i,layer in enumerate(upackedLayers):
+                td.printC('%d: %s' %(i,layer.name), 'B')
+            layerIndex = input('Please provide the layer index:')
+            layerIndex = int(layerIndex)
+            newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex+1])
+    else:
+        if isConcatenate:
+            newModel = Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
+        else:
+            if hasSequential:
+                upackedLayers = unBoundLayers(oriModel)
+                newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex+1])
+            else:
+                newModel=Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
     return newModel
 
 def analAvaiLayers(modelIn):
@@ -246,13 +297,14 @@ def analAvaiLayers(modelIn):
         avaiLayerIndex = range(len(modelIn.layers))
     return isConcatenate, hasSequential, list(avaiLayerIndex)
 
-def plotOneUMAP(outName, featureDict = None, pdf=None, td=td):
+def plotOneUMAP(outName, testLabelArr, plotDict, featureDict = None, pdf=None, td=td):
     if featureDict is None:
         mapper = umap.UMAP().fit(predicted_Probability)
     else:
         mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
 #    fig = plt.figure()
-    plotObj = umap.plot.points(mapper, labels=testLabelArr)
+    # print(testLabelArr)
+    plotObj = umap.plot.points(mapper, labels=testLabelArr, **plotDict)
 #    plt.savefig('tmpOut/tmp.jpg')
     
 #    print('Saving %s' %(subTitle))
@@ -513,7 +565,9 @@ if not outFigPath is None:
 #upackedModel = generateNewModelFromLayers(upackedLayers[:-4])
 #upackedModel.summary()
 oriPrediction = model.predict(testDataMats)
-newModel = genrerateNewModelFromModel(model,selectedLayerIndex=layerIndex, td=td)
+newModel = genrerateNewModelFromModel(model,selectedLayerIndex=layerIndex, td=td, interactive=interactive)
+td.printC('The model for plotting is:','b')
+newModel.summary()
 predicted_Probability = newModel.predict(testDataMats)
 
 if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:
@@ -522,10 +576,23 @@ if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:
 featureDict={
         'n_neighbors' : None,
         'min_dist' : None,
+        'metric' : defaultParaDict['metric'],
         }
+
+plotDict = {}
+if not paraDict['theme'] is None:
+    plotDict['theme'] = paraDict['theme']
+else:
+    plotDict['color_key_cmap'] = paraDict['color_key_cmap']
+    plotDict['background'] = paraDict['background']
+
 #print(grid_n_neighbors)
 if verbose:
     td.printC('Started to generating UMAP...', 'b')
+    
+if len(testLabelArr.shape) == 2:
+    testLabelArr = np.argmax(testLabelArr, axis=-1)
+
 if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
     for min_dist in np.arange(*grid_min_dist):
         featureDict['min_dist'] = min_dist
@@ -533,28 +600,28 @@ if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
             featureDict['n_neighbors'] = n_neighbors
             outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
 #            print(outName)
-            plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+            plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_min_dist) > 0:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     for min_dist in np.arange(*grid_min_dist):
         featureDict['min_dist'] = min_dist
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_n_neighbors) > 0:
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     for n_neighbors in np.arange(*grid_n_neighbors).astype(int):
         featureDict['n_neighbors'] = n_neighbors
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 else:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     outName = '%s/UMAP.pdf' %(outFigPath)
-    plotOneUMAP(outName, featureDict = featureDict, td=td)
+    plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, td=td)
 #mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
 #plt.figure()
 #plotObj = umap.plot.points(mapper, labels=testLabelArr)
