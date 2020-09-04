@@ -18,7 +18,7 @@ hidden_dims = 650
 print('Building model...')
 model = Sequential()
 # here you need to specify the input_length, we set the value of 100 as an example
-model.add(Embedding(max_features,embedding_size,input_length=100))
+model.add(Embedding(max_features,embedding_size,input_length=1500))
 model.add(Dropout(0.2))
 model.add(Conv1D(filters,kernel_size = kernel_size,padding ='valid',activation = 'relu',strides = 1))
 model.add(MaxPooling1D(pool_size = pool_size))

@@ -6,5 +6,6 @@ model = Sequential()
 model.add(Dense(210, activation = 'relu', input_shape=(420,)))
 model.add(Dropout(0.2))
 model.add(Dense(105, activation = 'relu'))
+model.add(Dropout(0.2))
 
 
