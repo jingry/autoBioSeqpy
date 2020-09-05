@@ -268,7 +268,7 @@ def genrerateNewModelFromModel(oriModel, selectedLayerIndex = -2, td = td, inter
                 td.printC('%d: %s' %(i,layer.name), 'B')
             layerIndex = input('Please provide the layer index:')
             layerIndex = int(layerIndex)
-            newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex+1])
+            newModel = generateNewModelFromLayers(upackedLayers[:layerIndex+1])
     else:
         if isConcatenate:
             newModel = Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
