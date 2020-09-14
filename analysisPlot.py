@@ -113,7 +113,7 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                    color_bar_set_over = None, cmapName = 'jet',extent=None,
                    stick_size = None, title_size = None, norm=None, 
                    driverCaxSize=0.05, driverCaxPad=0.05, xtickRotation = None,
-                   showFig = True):
+                   showFig = True, fontColor = None, figTitle = None, figTitleSize=None):
     data = matIn.copy()
     my_cmap = mpl.cm.get_cmap(cmapName) 
     if not color_bar_set_under is None:
@@ -154,20 +154,23 @@ def showMatWithVal(matIn,figSize = (16,10), fontsize = 10, precision = '%.3f', \
                 text_y = y + jump_y
     #             if data[y_index, x_index] > 0:
     #                 print text_x, text_y, label
-                if data[y_index, x_index] < vmin:
-                    fontColor = 'white'
-                elif data[y_index, x_index] < 0:
-    #                 fontColor = im.cmap(np.abs(data[x_index, y_index]/data.max()))                
-    #                 print label,np.abs(data[y_index, x_index]/data.max()),fontColor
-                    r,g,b,a = im.cmap(np.abs(data[y_index, x_index]/data.max()))        
-                    fontColor = (1. - r, 1. - g, 1. - b, a)
-                else:
-                    r,g,b,a = im.cmap(data[y_index, x_index]/data.max())
-                    fontColor = (1. - r, 1. - g, 1. - b, a)
-    #                 fontColor = im.cmap(1 - data[y_index, x_index]/data.max())
+                if fontColor is None:            
+                    if data[y_index, x_index] < vmin:
+                        fontColor = 'white'
+                    elif data[y_index, x_index] < 0:
+        #                 fontColor = im.cmap(np.abs(data[x_index, y_index]/data.max()))                
+        #                 print label,np.abs(data[y_index, x_index]/data.max()),fontColor
+                        r,g,b,a = im.cmap(np.abs(data[y_index, x_index]/data.max()))        
+                        fontColor = (1. - r, 1. - g, 1. - b, a)
+                    else:
+                        r,g,b,a = im.cmap(data[y_index, x_index]/data.max())
+                        fontColor = (1. - r, 1. - g, 1. - b, a)
+        #                 fontColor = im.cmap(1 - data[y_index, x_index]/data.max())
+                
                 ax.text(text_x, text_y, label, color=fontColor, ha='center', va='center', fontsize=fontsize )
     
-    
+    if not figTitle is None:
+        plt.title(figTitle, fontsize=figTitleSize)
     divider = make_axes_locatable(ax)
     caxDriver = divider.append_axes("right", size=driverCaxSize, pad=driverCaxPad)
     cax = fig.colorbar(im,cax = caxDriver)

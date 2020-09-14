@@ -45,6 +45,16 @@ Currently, the layer ranked at the last 2 will be used for plotting, users could
 
 Another selection for specify the layer is using --interactive 1 and following the questions to decide the layer name or index.
 
+Sometimes users might be interesting with a high-dimensional output (such as the output from a 2D-CNN layer), this time the parameter “--interactive” is recommend for make the further operation, for example using:
+	python tool/layerPlot.py --paraFile tmpOut/parameters.txt --interactive 1
+or
+	python tool/layerPlot.py --paraFile tmpOut/parameters.txt --interactive 1 --dimensionReduceMethod avg
+will give users options for reducing the dimension of the output, users can split one dimension into piece and plot all (or just only one piece) of them, which would be used to figure out the performance of the output from different CNN filters. The parameter “--dimensionReduceMethod” might be necessary according to the option selected by users. The possible values of “--dimensionReduceMethod” are “min”, “max”, “avg” and “flatten”.
+
+Please NOTE that if users choose to plot all pieces of a dimension, the parameters for grid plotting will be ignored since the calculation will be too large.
+
+
+
 To change the color, please use --theme or the --color_key_cmap and --background. NOTE that if --theme used, the --color_key_cmap and --background will not used for plotting.
 options available for --theme:        
        * 'blue'
@@ -99,6 +109,7 @@ defaultParaDict['theme'] = None
 defaultParaDict['color_key_cmap'] = 'rainbow'
 defaultParaDict['background'] = 'white'
 defaultParaDict['interactive'] = False
+defaultParaDict['dimensionReduceMethod'] = 'max'
 
 
 #numSet.add('grid_min_dist')
@@ -131,8 +142,10 @@ paraDict['dataTestFilePaths'] = paraDict['dataTrainFilePaths']
 paraDict['dataTestModelInd'] = paraDict['dataTrainModelInd']
 paraDict['dataTestLabel'] = paraDict['dataTrainLabel']
 
-
-
+dimensionReduceMethod = paraDict['dimensionReduceMethod']
+if not (dimensionReduceMethod == 'max' or dimensionReduceMethod == 'avg' or dimensionReduceMethod == 'min' or dimensionReduceMethod == 'flatten'):
+    td.printC('dimensionReduceMethod should be "max", "avg", "min" or "flatten"','r')
+    exit()
 #parameters
 
 grid_n_neighbors = paraDict['grid_n_neighbors']
@@ -297,13 +310,13 @@ def analAvaiLayers(modelIn):
         avaiLayerIndex = range(len(modelIn.layers))
     return isConcatenate, hasSequential, list(avaiLayerIndex)
 
-def plotOneUMAP(outName, testLabelArr, plotDict, featureDict = None, pdf=None, td=td):
+def plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = None, pdf=None, td=td, subTitle = None):
     if featureDict is None:
         mapper = umap.UMAP().fit(predicted_Probability)
     else:
         mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
 #    fig = plt.figure()
-    # print(testLabelArr)
+#    print(testLabelArr)
     plotObj = umap.plot.points(mapper, labels=testLabelArr, **plotDict)
 #    plt.savefig('tmpOut/tmp.jpg')
     
@@ -312,7 +325,8 @@ def plotOneUMAP(outName, testLabelArr, plotDict, featureDict = None, pdf=None, t
         plt.savefig(outName)
         td.printC('%s saved.' %(outName), 'g')
     else:
-        subTitle = re.findall('(NNeighbor.+)\.pdf',outName)[0]
+        if subTitle is None:
+            subTitle = re.findall('(NNeighbor.+)\.pdf',outName)[0]
         plt.title(subTitle)
 #        pdf.savefig(fig)
         pdf.savefig()
@@ -321,7 +335,25 @@ def plotOneUMAP(outName, testLabelArr, plotDict, featureDict = None, pdf=None, t
     plt.clf()
     plt.close('all')
     
-    
+def dimensionReduction(matIn, keepDim, dimensionReduceMethod):
+    tmpMat = matIn.copy()
+    if dimensionReduceMethod == 'flatten':
+        tmpMat = tmpMat.reshape([tmpMat.shape[0], np.prod(tmpMat.shape[1:])])
+    else:
+        tmpMethod = None
+        if dimensionReduceMethod == 'max':
+            tmpMethod = np.max
+        elif dimensionReduceMethod == 'min':
+            tmpMethod = np.min
+        elif dimensionReduceMethod == 'avg':
+            tmpMethod = np.mean
+        while len(tmpMat.shape) > 2:
+            recDim = len(tmpMat.shape) - 1
+            if recDim == keepDim:
+                recDim -= 1
+                keepDim -= 1
+            tmpMat = tmpMethod(tmpMat,axis = recDim)
+    return tmpMat
     
     
 verbose = paraDict['verbose']
@@ -467,7 +499,8 @@ if labelToMat:
 else:
     testLabelArr = testLabelArrs[0]
 
-
+if len(testLabelArr.shape) == 2:
+    testLabelArr = np.argmax(testLabelArr, axis=-1)
     
 if verbose:
 #    print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
@@ -570,6 +603,116 @@ td.printC('The model for plotting is:','b')
 newModel.summary()
 predicted_Probability = newModel.predict(testDataMats)
 
+while len(predicted_Probability.shape) > 2:
+    td.printC('The output from the current model contain high dimensione, currently is %s' %(str(predicted_Probability.shape[1:])),'b')
+    if interactive:
+        drSelect = input('How to make the dimensional reduction?\n"0" to select one piece in a dimension, \n"1" for all pieces of a dimension, \n"2" for dimensional reduction directly (using %s, could be changed by changing --dimensionReduceMethod) \nPlease select the number:' %(dimensionReduceMethod))
+        while not (drSelect == '0' or drSelect == '1' or drSelect == '2' ):
+            drSelect = input('type 0 or 1 or 2:')
+        if drSelect == '0':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to used for spliting the pieces? Currently the shape is %s and thus\n' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += 'select "%d" for the dim of "%d" which means pick one piece in %d for visualization,\n' %(i,s,s)
+            tmpStr = tmpStr + 'please select the number:'
+            splitDimension = input(tmpStr)
+            while int(splitDimension) >= len(tmpShape):
+                splitDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            tmpStr = 'Please select a number less than %d for extracting the data:' %(tmpShape[int(splitDimension)])
+            kernelNum = input(tmpStr)
+            while int(kernelNum) >=  tmpShape[int(splitDimension)]:
+                kernelNum = input('Please type an integer less than %d:' %(tmpShape[int(splitDimension)]))
+            splitDimension = int(splitDimension) + 1
+            kernelNum = int(kernelNum)
+            tmpCMD = 'predicted_Probability['
+            for i,s in enumerate(predicted_Probability.shape):
+                if i == splitDimension:
+                    tmpCMD += '%d,' %(kernelNum)
+                else:
+                    tmpCMD += ':,'
+            tmpCMD = tmpCMD[:-1] + ']'
+            predicted_Probability = eval(tmpCMD)
+            td.printC('The shape of the piece is: %s' %(predicted_Probability.shape[1:]), 'b')
+        elif drSelect == '1':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to used for spliting the pieces? Currently the shape is %s and thus\n' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += 'select "%d" for the dim of "%d" which means generate %d pieces of plotting,\n' %(i,s,s)
+            tmpStr = tmpStr + 'please select the number:'
+            splitDimension = input(tmpStr)
+            while int(splitDimension) >= len(tmpShape):
+                splitDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            splitDimension = int(splitDimension) + 1
+            reducedShape = list(tmpShape[:splitDimension-1]) + list(tmpShape[splitDimension:])
+            keepDimension = None
+            if len(reducedShape) > 1:
+                td.printC('The shape of the pieces is %s, which is still larger than 1' %(str(reducedShape)), 'b')
+                tmpStr = 'Which demension you whould like to keep? Currently the shape is %s and thus' %(str(reducedShape))
+                for i,s in enumerate(reducedShape):
+                    tmpStr += ' %d for "%d",' %(i,s)
+                tmpStr = tmpStr[:-1] + ':'
+                keepDimension = input(tmpStr)
+                while int(keepDimension) >= len(reducedShape):
+                    keepDimension = input('Please type an integer less than %d:' %(len(reducedShape)))
+                keepDimension = int(keepDimension) + 1
+#            if keepDimension >= splitDimension:
+#                keepDimension += 1
+            td.printC('Start to generate the UMAP figures, please note that the parameter for grid will be ignored in this case.','p')
+            #######################parameters for the sub-loop
+            n_neighbors = paraDict['n_neighbors']
+            featureDict={
+                    'n_neighbors' : None,
+                    'min_dist' : None,
+                    'metric' : defaultParaDict['metric'],
+                    }
+            
+            plotDict = {}
+            if not paraDict['theme'] is None:
+                plotDict['theme'] = paraDict['theme']
+            else:
+                plotDict['color_key_cmap'] = paraDict['color_key_cmap']
+                plotDict['background'] = paraDict['background']
+            featureDict['n_neighbors'] = n_neighbors
+            min_dist = paraDict['min_dist']
+            featureDict['min_dist'] = min_dist
+            pdf = PdfPages('%s/UMAP.pdf' %outFigPath)
+            outName = '%s/UMAP.pdf' %(outFigPath) #not used!
+            ##################################################
+            for kernelNum in range(predicted_Probability.shape[splitDimension]):
+                tmpCMD = 'predicted_Probability['
+                for i,s in enumerate(predicted_Probability.shape):
+                    if i == splitDimension:
+                        tmpCMD += '%d,' %(kernelNum)
+                    else:
+                        tmpCMD += ':,'
+                tmpCMD = tmpCMD[:-1] + ']'
+                subData = eval(tmpCMD)
+#                print(subData.shape)
+                if not keepDimension is None:
+                    subData = dimensionReduction(subData, keepDimension, dimensionReduceMethod)
+#                print(np.sum(subData))
+                subTitle = 'SubDimNum: %d/%d' %(kernelNum,predicted_Probability.shape[splitDimension]-1)
+                plotOneUMAP(outName, testLabelArr, subData, plotDict, featureDict = featureDict, pdf=pdf, td=td, subTitle=subTitle)
+            pdf.close()
+            if verbose:
+                td.printC('%s/UMAP.pdf saved.' %outFigPath, 'g')
+            exit()
+        elif drSelect == '2':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to keep? Currently the shape is %s and thus' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += ' %d for %d,' %(i,s)
+            tmpStr = tmpStr[:-1] + ':'
+            keepDimension = input(tmpStr)
+            while int(keepDimension) >= len(tmpShape):
+                keepDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            keepDimension = int(keepDimension) + 1
+            predicted_Probability = dimensionReduction(predicted_Probability, keepDimension, dimensionReduceMethod)
+    else:
+        td.printC('Since the --interactive is not used, the last dimension will be kept, please use --interactive for more options.')
+        predicted_Probability = dimensionReduction(predicted_Probability, len(predicted_Probability.shape) - 1, dimensionReduceMethod)
+        
+
 if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:
     pdf = PdfPages('%s/UMAP.pdf' %outFigPath)
     
@@ -590,8 +733,8 @@ else:
 if verbose:
     td.printC('Started to generating UMAP...', 'b')
     
-if len(testLabelArr.shape) == 2:
-    testLabelArr = np.argmax(testLabelArr, axis=-1)
+#if len(testLabelArr.shape) == 2:
+#    testLabelArr = np.argmax(testLabelArr, axis=-1)
 
 if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
     for min_dist in np.arange(*grid_min_dist):
@@ -600,28 +743,28 @@ if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
             featureDict['n_neighbors'] = n_neighbors
             outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
 #            print(outName)
-            plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
+            plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_min_dist) > 0:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     for min_dist in np.arange(*grid_min_dist):
         featureDict['min_dist'] = min_dist
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_n_neighbors) > 0:
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     for n_neighbors in np.arange(*grid_n_neighbors).astype(int):
         featureDict['n_neighbors'] = n_neighbors
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 else:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     outName = '%s/UMAP.pdf' %(outFigPath)
-    plotOneUMAP(outName, testLabelArr, plotDict, featureDict = featureDict, td=td)
+    plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, td=td)
 #mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
 #plt.figure()
 #plotObj = umap.plot.points(mapper, labels=testLabelArr)
