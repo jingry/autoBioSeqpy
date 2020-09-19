@@ -105,3 +105,19 @@ Because autoBioSeqpy can encode FASTA sequences into matrices, sometimes users m
 # 4. Conclusion
 This document is provided for users to know autoBioSeqpy. As an open source tool, we have documented all the code and function, but this document is still a better way to understand the framework. For more details, please see the word file 'manual.docx'. 
 We looking forward to receiving any bug reports and suggestions, please feel free to contact us anytime (ljs@swmu.edu.cn)
+
+# Citing autoBioSeqpy
+autoBioSeqpy is published at Journal of Chemical Information and Modeling. The link is https://pubs.acs.org/doi/abs/10.1021/acs.jcim.0c00409 and the related BibTeX is provided below:
+
+@article{jing2020autobioseqpy,
+  title={autoBioSeqpy: a deep learning tool for the classification of biological sequences},
+  author={Jing, Runyu and Li, Yizhou and Xue, Li and Liu, Fengjuan and Li, Menglong and Luo, Jiesi},
+  journal={Journal of Chemical Information and Modeling},
+  volume={60},
+  number={8},
+  pages={3755--3764},
+  year={2020},
+  publisher={ACS Publications}
+}
+
+Please use is as needed.
