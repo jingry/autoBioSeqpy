@@ -43,6 +43,32 @@ If grid search used, the plots will be save in a pdf with multiple pages.
 
 Currently, the layer ranked at the last 2 will be used for plotting, users could use --layerIndex to change it. But please note that not all the layer is able to be used, please see the jupyter notebook for more details.
 
+Another selection for specify the layer is using --interactive 1 and following the questions to decide the layer name or index.
+
+Sometimes users might be interesting with a high-dimensional output (such as the output from a 2D-CNN layer), this time the parameter “--interactive” is recommend for make the further operation, for example using:
+	python tool/layerPlot.py --paraFile tmpOut/parameters.txt --interactive 1
+or
+	python tool/layerPlot.py --paraFile tmpOut/parameters.txt --interactive 1 --dimensionReduceMethod avg
+will give users options for reducing the dimension of the output, users can split one dimension into slice and plot all (or just only one slice) of them, which would be used to figure out the performance of the output from different CNN filters. The parameter “--dimensionReduceMethod” might be necessary according to the option selected by users. The possible values of “--dimensionReduceMethod” are “min”, “max”, “avg” and “flatten”.
+
+Please NOTE that if users choose to plot all slices of a dimension, the parameters for grid plotting will be ignored since the calculation will be too large.
+
+
+
+To change the color, please use --theme or the --color_key_cmap and --background. NOTE that if --theme used, the --color_key_cmap and --background will not used for plotting.
+options available for --theme:        
+       * 'blue'
+       * 'red'
+       * 'green'
+       * 'inferno'
+       * 'fire'
+       * 'viridis'
+       * 'darkblue'
+       * 'darkred'
+       * 'darkgreen'
+The parameter for --color_key_cmap is following matplotlib, please see https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html for details.
+The parameter for --background could be a simple 'black' or 'white', but could be other color obeying the rule of matplotlib.
+
 NOTE: This script is to plot the model layers using UMAP, currently only n_neighbor and min_dist are able to be modified, if users want to use more features of UMAP or integrate this script into other work, please use our jupyter notebook (in the folder "notebook") as a template.
 '''
 import paraParser
@@ -76,6 +102,16 @@ defaultParaDict['layerIndex'] = -2
 defaultParaDict['figWidth'] = 800
 defaultParaDict['figHeight'] = 800
 defaultParaDict['outFigFolder'] = None
+defaultParaDict['metric'] = 'euclidean'
+defaultParaDict['color_key_cmap'] = 'rainbow'
+defaultParaDict['background'] = 'white'
+defaultParaDict['theme'] = None
+defaultParaDict['color_key_cmap'] = 'rainbow'
+defaultParaDict['background'] = 'white'
+defaultParaDict['interactive'] = False
+defaultParaDict['dimensionReduceMethod'] = 'max'
+
+
 #numSet.add('grid_min_dist')
 #intSet.add('grid_n_neighbors')
 numSet.add('min_dist')
@@ -83,30 +119,20 @@ intSet.add('n_neighbors')
 intSet.add('layerIndex')
 intSet.add('figWidth')
 intSet.add('figHeight')
+boolSet.add('interactive')
 
 paraDictCMD = paraParser.parseParameters(sys.argv[1:],defaultParaTuple=(defaultParaDict, numSet, intSet, boolSet, objSet))
 paraFile = paraDictCMD['paraFile']
 paraDict = paraParser.parseParametersFromFile(paraFile,defaultParaTuple=(paraDictCMD, numSet, intSet, boolSet, objSet))
 
-#paraFile = paraDictCMD['paraFile']
-#if not paraFile is None:
-#    paraDict = paraParser.parseParametersFromFile(paraFile)
-#    paraDict['dataTestFilePaths'] = paraDictCMD['dataTestFilePaths']
-#    paraDict['dataTestModelInd'] = paraDictCMD['dataTestModelInd']
-#else:
-#    paraDict = paraDictCMD.copy()
-
-
-#paraFile = 'D:/workspace/autoBioSeqpy/tmpOut/parameters.txt'
-#paraDict = paraParser.parseParametersFromFile(paraFile)
-#paraDict['dataTestFilePaths'] = paraDictCMD['dataTestFilePaths']
-#paraDict['dataTestModelInd'] = paraDictCMD['dataTestModelInd']
 paraDict['dataTestFilePaths'] = paraDict['dataTrainFilePaths']
 paraDict['dataTestModelInd'] = paraDict['dataTrainModelInd']
 paraDict['dataTestLabel'] = paraDict['dataTrainLabel']
 
-
-
+dimensionReduceMethod = paraDict['dimensionReduceMethod']
+if not (dimensionReduceMethod == 'max' or dimensionReduceMethod == 'avg' or dimensionReduceMethod == 'min' or dimensionReduceMethod == 'flatten'):
+    td.printC('dimensionReduceMethod should be "max", "avg", "min" or "flatten"','r')
+    exit()
 #parameters
 
 grid_n_neighbors = paraDict['grid_n_neighbors']
@@ -138,6 +164,8 @@ outSaveFolderPath = paraDict['outSaveFolderPath']
 showFig = paraDict['showFig']
 saveFig = paraDict['saveFig']
 savePrediction = paraDict['savePrediction']
+
+interactive = paraDict['interactive']
 
 loss = paraDict['loss']
 optimizer = paraDict['optimizer']
@@ -190,13 +218,6 @@ if not os.path.exists(modelPredictFile):
 model = moduleRead.readModelFromJsonFileDirectly(modelPredictFile,weightLoadFile)
 
     
-#modelPredictFile = outSaveFolderPath + os.path.sep + modelSaveName
-#
-#
-#
-#weightLoadFile = outSaveFolderPath + os.path.sep + weightSaveName
-
-
 def unBoundLayers(modelIn,layers = []):
     for layer in modelIn.layers:
         if not 'sequential' in layer.name.lower():
@@ -211,22 +232,45 @@ def generateNewModelFromLayers(layers):
         newModel.add(layer)
     return newModel
 
-def genrerateNewModelFromModel(oriModel, selectedLayerIndex = -2, td = td):
+def genrerateNewModelFromModel(oriModel, selectedLayerIndex = -2, td = td, interactive=False):
     isConcatenate, hasSequential, avaiLayerIndex = analAvaiLayers(oriModel)
-    
+    # print(selectedLayerIndex)
     layerIndexFix = selectedLayerIndex
     if layerIndexFix < 0:
         layerIndexFix = layerIndexFix + len(avaiLayerIndex)
     if layerIndexFix < 0 or layerIndexFix > len(avaiLayerIndex) - 1:
         td.printC('Only %d layers could be used to generating UMAP, but the index %d is out of the range.' %(len(analAvaiLayers),selectedLayerIndex),'r')
-    if isConcatenate:
-        newModel = Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
-    else:
+    
+    if interactive:
+        td.printC('Since interactive is set as True, few operations will be decided by users:','b')
         if hasSequential:
-            upackedLayers = unBoundLayers(oriModel)
-            newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex])
+            td.printC('A sequential model detected in the current model, the index model is suggested.','p')
+        useName = input('Using index (e.g. an integer such as 0,1,2,...) or the name printed above?\n0 for index and 1 for name:')
+        while not (useName == '0' or useName == '1'):
+            useName = input('type 0 or 1:')
+        if useName == '1':
+            td.printC('The names of the layers:','b')
+            for layer in oriModel.layers:
+                td.printC(layer.name,'B')
+            layerName = input('Please provide the layer name:')
+            newModel = Model(inputs=oriModel.input,outputs=oriModel.get_layer(layerName).output)
         else:
-            newModel=Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
+            td.printC('The names and indexes of the layers:','b')
+            upackedLayers = unBoundLayers(oriModel)
+            for i,layer in enumerate(upackedLayers):
+                td.printC('%d: %s' %(i,layer.name), 'B')
+            layerIndex = input('Please provide the layer index:')
+            layerIndex = int(layerIndex)
+            newModel = generateNewModelFromLayers(upackedLayers[:layerIndex+1])
+    else:
+        if isConcatenate:
+            newModel = Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
+        else:
+            if hasSequential:
+                upackedLayers = unBoundLayers(oriModel)
+                newModel = generateNewModelFromLayers(upackedLayers[:selectedLayerIndex+1])
+            else:
+                newModel=Model(inputs=oriModel.input,outputs=oriModel.layers[avaiLayerIndex[selectedLayerIndex]].output)
     return newModel
 
 def analAvaiLayers(modelIn):
@@ -246,21 +290,19 @@ def analAvaiLayers(modelIn):
         avaiLayerIndex = range(len(modelIn.layers))
     return isConcatenate, hasSequential, list(avaiLayerIndex)
 
-def plotOneUMAP(outName, featureDict = None, pdf=None, td=td):
+def plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = None, pdf=None, td=td, subTitle = None):
     if featureDict is None:
         mapper = umap.UMAP().fit(predicted_Probability)
     else:
         mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
-#    fig = plt.figure()
-    plotObj = umap.plot.points(mapper, labels=testLabelArr)
-#    plt.savefig('tmpOut/tmp.jpg')
-    
-#    print('Saving %s' %(subTitle))
+    plotObj = umap.plot.points(mapper, labels=testLabelArr, **plotDict)
+
     if pdf is None:        
         plt.savefig(outName)
         td.printC('%s saved.' %(outName), 'g')
     else:
-        subTitle = re.findall('(NNeighbor.+)\.pdf',outName)[0]
+        if subTitle is None:
+            subTitle = re.findall('(NNeighbor.+)\.pdf',outName)[0]
         plt.title(subTitle)
 #        pdf.savefig(fig)
         pdf.savefig()
@@ -269,7 +311,25 @@ def plotOneUMAP(outName, featureDict = None, pdf=None, td=td):
     plt.clf()
     plt.close('all')
     
-    
+def dimensionReduction(matIn, keepDim, dimensionReduceMethod):
+    tmpMat = matIn.copy()
+    if dimensionReduceMethod == 'flatten':
+        tmpMat = tmpMat.reshape([tmpMat.shape[0], np.prod(tmpMat.shape[1:])])
+    else:
+        tmpMethod = None
+        if dimensionReduceMethod == 'max':
+            tmpMethod = np.max
+        elif dimensionReduceMethod == 'min':
+            tmpMethod = np.min
+        elif dimensionReduceMethod == 'avg':
+            tmpMethod = np.mean
+        while len(tmpMat.shape) > 2:
+            recDim = len(tmpMat.shape) - 1
+            if recDim == keepDim:
+                recDim -= 1
+                keepDim -= 1
+            tmpMat = tmpMethod(tmpMat,axis = recDim)
+    return tmpMat
     
     
 verbose = paraDict['verbose']
@@ -335,29 +395,6 @@ for i,subDataType in enumerate(dataTypeList):
     featureGenerators.append(featureGenerator)
     assert subDataType.lower() in ['protein','dna','rna','other']
 
-#if dataType is None:
-#    if verbose:
-#        print('NO data type provided, please provide a data type suce as \'protein\', \'dna\' or\'rna\'')
-#assert not dataType is None
-#
-#if dataType.lower() == 'protein':
-#    if verbose:
-#        print('Enconding protein data...')
-#    featureGenerator = dataProcess.ProteinFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-#elif dataType.lower() == 'dna':
-#    if verbose:
-#        print('Enconding DNA data...')
-#    featureGenerator = dataProcess.DNAFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-#elif dataType.lower() == 'rna':
-#    if verbose:
-#        print('Enconding RNA data...')
-#    featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType, useKMer=useKMer, KMerNum=KMerNum)
-#else:
-#    print('Unknow dataType %r, please use \'protein\', \'dna\' or\'rna\'' %dataType)
-#assert dataType.lower() in ['protein','dna','rna']
-
-
-
 
 if verbose:
     td.printC('Checking the number of test files, which should be larger than 1 (e.g. at least two labels)...','b')
@@ -396,16 +433,7 @@ testNameLists = [nameTemp] * len(testNameLists)
 tmpTempLabel = testLabelArrs[0]
 for tmpLabel in testLabelArrs:
     assert np.sum(np.array(tmpTempLabel) - np.array(tmpLabel)) == 0   
-#
-#    
-#testDataLoaders = []
-#for i,dataPath in enumerate(dataTestFilePaths):
-#    #The label is set to 0, since we do not need the label for testing (only for accuracy calculating)
-#    dataLoader = dataProcess.DataLoader(label = 0, featureGenerator=featureGenerator)
-#    dataLoader.readFile(dataPath, spcLen = spcLen)
-#    testDataLoaders.append(dataLoader)
-#testDataSetCreator = dataProcess.DataSetCreator(testDataLoaders)
-#testDataMat, testLabelArr = testDataSetCreator.getDataSet(toShuffle=shuffleDataTest)
+
 
 if labelToMat:
     if verbose:
@@ -415,21 +443,14 @@ if labelToMat:
 else:
     testLabelArr = testLabelArrs[0]
 
-
+if len(testLabelArr.shape) == 2:
+    testLabelArr = np.argmax(testLabelArr, axis=-1)
     
 if verbose:
 #    print('Datasets generated, the scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]))    
     td.printC('begin to prepare model...','b')
 #    print('Loading keras model from .py files...')
     
-
-#
-#if not inputLength is None:
-#    if inputLength == 0:
-#        inputLength = testDataMat.shape[1]
-
-
-
 if verbose:
     td.printC('Checking module file for modeling','b')
 if modelPredictFile is None:
@@ -447,19 +468,7 @@ model = moduleRead.readModelFromJsonFileDirectly(modelPredictFile,weightLoadFile
 if verbose:
     td.printC('Module loaded, generating the summary of the module','b')
     model.summary()
-#    
-#if '2D' in str(model.layers[0].__class__):
-#    if verbose:
-#        print('2D layer detected, data will be reshaped accroding to the \'spcLen\'')    
-#    if useKMer:
-#        reshapeLen = spcLen - KMerNum + 1
-#    else:            
-#        reshapeLen = spcLen 
-#    #newShape = (int(trainDataMat.shape[1]/spcLen),spcLen)
-##    newShape = (int(trainDataMat.shape[1]/reshapeLen),reshapeLen)
-##    trainDataMat = trainDataMat.reshape(trainDataMat.shape[0],int(trainDataMat.shape[1]/reshapeLen),reshapeLen,1)
-#    testDataMat = testDataMat.reshape(testDataMat.shape[0],int(testDataMat.shape[1]/reshapeLen),reshapeLen,1)
-#    
+
 '''
 if not outSaveFolderPath is None:
     if not os.path.exists(outSaveFolderPath):        
@@ -490,31 +499,126 @@ if not outFigPath is None:
 #        if verbose:
 #            td.printC('outpath %s is exists, the outputs might be overwirten' %outSaveFolderPath,'p')    
 
-#exclude reshape
-#subModel = model.layers[1].layers[3]
-#subModel.output
 
-#tmpLayer = model.get_input_at(0)
-#subModel=Model(inputs=model.input,outputs=model.layers[-2].output)
-#subModel1 = Model(inputs=model.layers[1].input,outputs = subModel.layers[1].output)
-
-#tmpModel =  Sequential()
-#tmpModel.add(model.layers[0])
-#tmpModel.add(model.layers[1].layers[0])
-#tmpModel.add(model.layers[1].layers[1])
-#tmpModel.add(model.layers[1].layers[2])
-#tmpModel.add(model.layers[1].layers[3])
-#tmpModel.add(model.layers[1].layers[4])
-#tmpModel.add(model.layers[1].layers[5])
-#tmpModel.add(model.layers[1].layers[6])
-    
 
 #upackedLayers = unBoundLayers(model)
 #upackedModel = generateNewModelFromLayers(upackedLayers[:-4])
 #upackedModel.summary()
 oriPrediction = model.predict(testDataMats)
-newModel = genrerateNewModelFromModel(model,selectedLayerIndex=layerIndex, td=td)
+newModel = genrerateNewModelFromModel(model,selectedLayerIndex=layerIndex, td=td, interactive=interactive)
+td.printC('The model for plotting is:','b')
+newModel.summary()
 predicted_Probability = newModel.predict(testDataMats)
+
+while len(predicted_Probability.shape) > 2:
+    td.printC('The output from the current model contain high dimensione, currently is %s' %(str(predicted_Probability.shape[1:])),'b')
+    if interactive:
+        drSelect = input('How to make the dimensional reduction?\n"0" to select one slice in a dimension, \n"1" for all slices of a dimension, \n"2" for dimensional reduction directly (using %s, could be changed by changing --dimensionReduceMethod) \nPlease select the number:' %(dimensionReduceMethod))
+        while not (drSelect == '0' or drSelect == '1' or drSelect == '2' ):
+            drSelect = input('type 0 or 1 or 2:')
+        if drSelect == '0':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to used for spliting? Currently the shape is %s and thus\n' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += 'select "%d" for the dim of "%d" which means pick one slice in %d for visualization,\n' %(i,s,s)
+            tmpStr = tmpStr + 'please select the number:'
+            splitDimension = input(tmpStr)
+            while int(splitDimension) >= len(tmpShape):
+                splitDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            tmpStr = 'Please select a number less than %d for extracting the data:' %(tmpShape[int(splitDimension)])
+            kernelNum = input(tmpStr)
+            while int(kernelNum) >=  tmpShape[int(splitDimension)]:
+                kernelNum = input('Please type an integer less than %d:' %(tmpShape[int(splitDimension)]))
+            splitDimension = int(splitDimension) + 1
+            kernelNum = int(kernelNum)
+            tmpCMD = 'predicted_Probability['
+            for i,s in enumerate(predicted_Probability.shape):
+                if i == splitDimension:
+                    tmpCMD += '%d,' %(kernelNum)
+                else:
+                    tmpCMD += ':,'
+            tmpCMD = tmpCMD[:-1] + ']'
+            predicted_Probability = eval(tmpCMD)
+            td.printC('The shape of the slice is: %s' %(predicted_Probability.shape[1:]), 'b')
+        elif drSelect == '1':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to used for spliting? Currently the shape is %s and thus\n' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += 'select "%d" for the dim of "%d" which means generate %d slices of plotting,\n' %(i,s,s)
+            tmpStr = tmpStr + 'please select the number:'
+            splitDimension = input(tmpStr)
+            while int(splitDimension) >= len(tmpShape):
+                splitDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            splitDimension = int(splitDimension) + 1
+            reducedShape = list(tmpShape[:splitDimension-1]) + list(tmpShape[splitDimension:])
+            keepDimension = None
+            if len(reducedShape) > 1:
+                td.printC('The shape of the slices is %s, which is still larger than 1' %(str(reducedShape)), 'b')
+                tmpStr = 'Which demension you whould like to keep? Currently the shape is %s and thus' %(str(reducedShape))
+                for i,s in enumerate(reducedShape):
+                    tmpStr += ' %d for "%d",' %(i,s)
+                tmpStr = tmpStr[:-1] + ':'
+                keepDimension = input(tmpStr)
+                while int(keepDimension) >= len(reducedShape):
+                    keepDimension = input('Please type an integer less than %d:' %(len(reducedShape)))
+                keepDimension = int(keepDimension) + 1
+#            if keepDimension >= splitDimension:
+#                keepDimension += 1
+            td.printC('Start to generate the UMAP figures, please note that the parameter for grid will be ignored in this case.','p')
+            #######################parameters for the sub-loop
+            n_neighbors = paraDict['n_neighbors']
+            featureDict={
+                    'n_neighbors' : None,
+                    'min_dist' : None,
+                    'metric' : defaultParaDict['metric'],
+                    }
+            
+            plotDict = {}
+            if not paraDict['theme'] is None:
+                plotDict['theme'] = paraDict['theme']
+            else:
+                plotDict['color_key_cmap'] = paraDict['color_key_cmap']
+                plotDict['background'] = paraDict['background']
+            featureDict['n_neighbors'] = n_neighbors
+            min_dist = paraDict['min_dist']
+            featureDict['min_dist'] = min_dist
+            pdf = PdfPages('%s/UMAP.pdf' %outFigPath)
+            outName = '%s/UMAP.pdf' %(outFigPath) #not used!
+            ##################################################
+            for kernelNum in range(predicted_Probability.shape[splitDimension]):
+                tmpCMD = 'predicted_Probability['
+                for i,s in enumerate(predicted_Probability.shape):
+                    if i == splitDimension:
+                        tmpCMD += '%d,' %(kernelNum)
+                    else:
+                        tmpCMD += ':,'
+                tmpCMD = tmpCMD[:-1] + ']'
+                subData = eval(tmpCMD)
+#                print(subData.shape)
+                if not keepDimension is None:
+                    subData = dimensionReduction(subData, keepDimension, dimensionReduceMethod)
+#                print(np.sum(subData))
+                subTitle = 'SubDimNum: %d/%d' %(kernelNum,predicted_Probability.shape[splitDimension]-1)
+                plotOneUMAP(outName, testLabelArr, subData, plotDict, featureDict = featureDict, pdf=pdf, td=td, subTitle=subTitle)
+            pdf.close()
+            if verbose:
+                td.printC('%s/UMAP.pdf saved.' %outFigPath, 'g')
+            exit()
+        elif drSelect == '2':
+            tmpShape = predicted_Probability.shape[1:]
+            tmpStr = 'Which demension you whould like to keep? Currently the shape is %s and thus' %(str(tmpShape))
+            for i,s in enumerate(tmpShape):
+                tmpStr += ' %d for %d,' %(i,s)
+            tmpStr = tmpStr[:-1] + ':'
+            keepDimension = input(tmpStr)
+            while int(keepDimension) >= len(tmpShape):
+                keepDimension = input('Please type an integer less than %d:' %(len(tmpShape)))
+            keepDimension = int(keepDimension) + 1
+            predicted_Probability = dimensionReduction(predicted_Probability, keepDimension, dimensionReduceMethod)
+    else:
+        td.printC('Since the --interactive is not used, the last dimension will be kept, please use --interactive for more options.')
+        predicted_Probability = dimensionReduction(predicted_Probability, len(predicted_Probability.shape) - 1, dimensionReduceMethod)
+        
 
 if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:
     pdf = PdfPages('%s/UMAP.pdf' %outFigPath)
@@ -522,10 +626,23 @@ if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:
 featureDict={
         'n_neighbors' : None,
         'min_dist' : None,
+        'metric' : defaultParaDict['metric'],
         }
+
+plotDict = {}
+if not paraDict['theme'] is None:
+    plotDict['theme'] = paraDict['theme']
+else:
+    plotDict['color_key_cmap'] = paraDict['color_key_cmap']
+    plotDict['background'] = paraDict['background']
+
 #print(grid_n_neighbors)
 if verbose:
     td.printC('Started to generating UMAP...', 'b')
+    
+#if len(testLabelArr.shape) == 2:
+#    testLabelArr = np.argmax(testLabelArr, axis=-1)
+
 if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
     for min_dist in np.arange(*grid_min_dist):
         featureDict['min_dist'] = min_dist
@@ -533,33 +650,28 @@ if len(grid_min_dist) > 0 and len(grid_n_neighbors) > 0:
             featureDict['n_neighbors'] = n_neighbors
             outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
 #            print(outName)
-            plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+            plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_min_dist) > 0:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     for min_dist in np.arange(*grid_min_dist):
         featureDict['min_dist'] = min_dist
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 elif len(grid_n_neighbors) > 0:
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     for n_neighbors in np.arange(*grid_n_neighbors).astype(int):
         featureDict['n_neighbors'] = n_neighbors
         outName = '%s/UMAP_NNeighbor_%s_MDist_%s.pdf' %(outFigPath,str(n_neighbors),str(min_dist))
-        plotOneUMAP(outName, featureDict = featureDict, pdf=pdf, td=td)
+        plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, pdf=pdf, td=td)
 else:
     n_neighbors = paraDict['n_neighbors']
     featureDict['n_neighbors'] = n_neighbors
     min_dist = paraDict['min_dist']
     featureDict['min_dist'] = min_dist
     outName = '%s/UMAP.pdf' %(outFigPath)
-    plotOneUMAP(outName, featureDict = featureDict, td=td)
-#mapper = umap.UMAP(**featureDict).fit(predicted_Probability)
-#plt.figure()
-#plotObj = umap.plot.points(mapper, labels=testLabelArr)
-#plt.savefig('tmpOut/tmp.jpg')
-#plotOneUMAP(featureDict = featureDict)
+    plotOneUMAP(outName, testLabelArr, predicted_Probability, plotDict, featureDict = featureDict, td=td)
 
 
 if len(grid_min_dist) > 0 or len(grid_n_neighbors) > 0:

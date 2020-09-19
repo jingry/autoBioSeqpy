@@ -1,5 +1,5 @@
 --dataType protein
---dataEncodingType dict
+--dataEncodingType onehot
 --spcLen 2000
 --firstKernelSize 
 --dataTrainFilePaths examples/Gramnegativebacterialsecretedproteins/data/T1SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T2SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T3SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T4SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T5SS_train.txt examples/Gramnegativebacterialsecretedproteins/data/T7SS_train.txt
@@ -14,12 +14,12 @@
 --figDPI 300
 --savePrediction True
 --dataSplitScale None
---modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/protein_CNN1D+GlobalMaxPooling_model.py
+--modelLoadFile examples/Gramnegativebacterialsecretedproteins/model/CNN.py
 --weightLoadFile 
 --shuffleDataTrain True
 --shuffleDataTest False
---batch_size 40
---epochs 50
+--batch_size 10
+--epochs 30
 --useKMer 
 --KMerNum 
 --inputLength 
