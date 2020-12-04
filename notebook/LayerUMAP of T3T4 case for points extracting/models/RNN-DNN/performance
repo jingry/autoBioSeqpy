@@ -1,0 +1,9 @@
+Confusion Matrix:
+91	21	
+15	76	
+Predicting Performance:
+ACC: 0.822660 
+F1: 0.808511 
+Recall: 0.835165 
+Pre: 0.783505 
+MCC: 0.644824 

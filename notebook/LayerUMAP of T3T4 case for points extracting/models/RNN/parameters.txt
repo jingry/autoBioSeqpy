@@ -1,0 +1,38 @@
+--dataType protein
+--dataEncodingType dict
+--spcLen 1500
+--firstKernelSize 
+--dataTrainFilePaths examples/T3T4/dataset/trainT3.txt examples/T3T4/dataset/trainT4.txt
+--dataTrainLabel 1 0
+--dataTestFilePaths examples/T3T4/dataset/testT3.txt examples/T3T4/dataset/testT4.txt
+--dataTestLabel 1 0
+--dataTrainModelInd 
+--dataTestModelInd 
+--outSaveFolderPath tmpOut
+--showFig True
+--saveFig True
+--figDPI 300
+--savePrediction True
+--dataSplitScale None
+--modelLoadFile examples/T3T4/model/RNN.py
+--weightLoadFile 
+--shuffleDataTrain True
+--shuffleDataTest False
+--batch_size 25
+--epochs 40
+--useKMer 
+--KMerNum 
+--inputLength 
+--loss binary_crossentropy
+--optimizer optimizers.Adam()
+--metrics acc
+--modelSaveName tmpMod.json
+--weightSaveName tmpWeight.bin
+--noGPU False
+--paraFile None
+--paraSaveName parameters.txt
+--seed 1
+--labelToMat False
+--colorText Auto
+--verbose True
+--reshapeSize 

@@ -1,0 +1,9 @@
+Confusion Matrix:
+95	17	
+23	68	
+Predicting Performance:
+ACC: 0.802956 
+F1: 0.772727 
+Recall: 0.747253 
+Pre: 0.800000 
+MCC: 0.600257 
