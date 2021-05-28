@@ -445,7 +445,15 @@ class DataLoader:
         for name in self.names:
             dataArr = self.arrDict[name]
             dataMat.append(dataArr)
+#        dataMat = None
+#        for name in self.names:
+#            dataArr = self.arrDict[name]
+#            if dataMat is None:
+#                dataMat = dataArr.reshape([1,len(dataArr)])
+#            else:
+#                dataMat = np.concatenate([dataMat,dataArr.reshape([1,len(dataArr)])],axis=0)
         return np.array(dataMat),label 
+#        return dataMat,label 
     
     def returnDataMat(self):
         if not self.featureGenerator.generatorType == 'Other':
