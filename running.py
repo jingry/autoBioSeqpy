@@ -223,7 +223,7 @@ for i,subDataType in enumerate(dataTypeList):
     else:
         td.printC('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType, 'r')
     featureGenerators.append(featureGenerator)
-    assert subDataType.lower() in ['protein','dna','rna','other']
+    assert subDataType.lower() in ['protein','dna','rna','smiles','other']
 
 #%% dataset generating
 if len(dataTestFilePaths) > 0:
