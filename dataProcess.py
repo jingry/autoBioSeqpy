@@ -179,6 +179,11 @@ class FeatureGenerator:
                 _res.append(tmpArr)
         return _res
     
+    # def smilesStructureParser(self,seq):
+    #     nodeSeq = []
+    #     adjMat = None
+        
+    
     def seqEncoding(self,seq):
         '''
         Enconding the residues, the encoding type is decided by the inner parameters.
@@ -206,6 +211,9 @@ class FeatureGenerator:
             else:
                 feaLen = seqLen * (len(self.oneHotSeq) - len(self.oneHotIgnore)) 
                 seqData = np.array(self.OnehotEncoding1D(seq)).reshape([1,feaLen])
+                
+        
+        
 #        dataMat.append(seqData)
 #        if encodingType == "dict":
 #            return np.array(dataMat).reshape(len(self.names),seqLen),label
@@ -365,6 +373,7 @@ class SmilesFeatureGenerator(FeatureGenerator):
         self.wordIndexDict = {'#': 0, ')': 1, '(': 2, '+': 3, '-': 4, '/': 5, '1': 6, '3': 7, '2': 8, '5': 9, '4': 10, '7': 11, '6': 12,
                               '8': 13, '=': 14, '@': 15, 'C': 16, 'B': 17, 'F': 18, 'I': 19, 'H': 20, 'O': 21, 'N': 22, 'S': 23, '[': 24, 
                               ']': 25, '\\': 26, 'c': 27, 'l': 28, 'o': 29, 'n': 30, 'p': 31, 's': 32, 'r': 33, 'X':34}
+        self.generatorType = 'Smiles'
         
     def structureEncoding(self):
         'TODO: parsing the structure into graph'
@@ -448,7 +457,29 @@ class DataLoader:
             dataArr = np.array(eles[1:],dtype=float)
             self.names.append(name)
             self.arrDict[name] = dataArr
-    
+            
+    def readSmileFile(self,inpFile,spcLen):
+        fileabsName = os.path.split(inpFile)[-1]
+        for line in open(inpFile):
+            if line.startswith('#'):
+                continue 
+            if line.startswith('>'):
+#               name = line.replace('>','').split()[0]
+                name = fileabsName + '_' + line.replace('>','').split()[0]
+                annotation = line.strip()
+                self.names.append(name)
+                self.seqs[name] = ''
+                self.annotation[name] = annotation
+            else:
+                self.seqs[name] += line.replace('\n','')
+        self.spcLen = spcLen
+        # for name in self.names:
+        #     if len(self.seqs[name]) <= spcLen:
+        #         self.seqs[name] = self.seqs[name] + "X" * (spcLen - len(self.seqs[name]))
+        #     else:
+        #         self.seqs[name] = self.seqs[name][0:spcLen]
+        
+        
     def readFile(self,inpFile,**kwargs):
         if self.featureGenerator.generatorType == 'Other':
             del kwargs['spcLen']
