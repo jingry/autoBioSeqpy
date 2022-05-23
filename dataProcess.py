@@ -330,7 +330,7 @@ class SmilesFeatureGenerator(FeatureGenerator):
     '''
     def __init__(self, encodingType, useKMer = False, KMerNum = 3):
         FeatureGenerator.__init__(self, encodingType, useKMer = useKMer, KMerNum = KMerNum)
-        self.oneHotSeq = '#)(+-/13254768=@CBFIHONS[]\\clonpsr'
+        self.oneHotSeq = '#)(+-/13254768=@CBFIHONS[]\\clonpsrX'
         self.oneHotIgnore = 'X'
         self.oneHot1DDict = {'#': [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
                              ')': [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
