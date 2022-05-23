@@ -212,6 +212,10 @@ for i,subDataType in enumerate(dataTypeList):
         if verbose:
             td.printC('Enconding RNA data for model %d ...' %i,'b')
         featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+    elif subDataType.lower() == 'smiles':
+        if verbose:
+            td.printC('Enconding Smiles data for model %d ...' %i,'b')
+        featureGenerator = dataProcess.SmilesFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     elif subDataType.lower() == 'other':
         if verbose:
             td.printC('Reading CSV-like data for model %d ...' %i,'b')
