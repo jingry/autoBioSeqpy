@@ -771,7 +771,23 @@ def matToLabel(labelIn,arrLabelDict,td=None):
     return labelOut
 
 def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):
-
+    if checkNameLength:
+        try:
+            nameTempSet = set(nameTemp)
+            for tmpName in names:
+                tmpSet = set(tmpName)
+                assert nameTempSet == tmpSet
+        except:
+            for i,n in nameTemp:
+                nameTemp[i] = '_'.join(n.split('_')[1:])
+            for tmpName in names:
+                for i,n in tmpName:
+                    tmpName[i] = '_'.join(n.split('_')[1:])
+            nameTempSet = set(nameTemp)
+            for tmpName in names:
+                tmpSet = set(tmpName)
+                assert nameTempSet == tmpSet
+                
 #    nameTemp = names[0]
     nameArgArgIndex = np.argsort(np.argsort(nameTemp))
     matsOut = []
@@ -781,11 +797,8 @@ def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):
     indexes = []
 #    indexes.append(np.array(range(len(nameTemp))))
     
-    if checkNameLength:
-        nameTempSet = set(nameTemp)
-        for tmpName in names:
-            tmpSet = set(tmpName)
-            assert nameTempSet == tmpSet
+    
+                
     for i in range(0,len(names)):
         tmpName = names[i]
         tmpArgIndex = np.argsort(tmpName)
