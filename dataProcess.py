@@ -778,10 +778,10 @@ def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):
                 tmpSet = set(tmpName)
                 assert nameTempSet == tmpSet
         except:
-            for i,n in nameTemp:
+            for i,n in enumerate(nameTemp):
                 nameTemp[i] = '_'.join(n.split('_')[1:])
             for tmpName in names:
-                for i,n in tmpName:
+                for i,n in enumerate(tmpName):
                     tmpName[i] = '_'.join(n.split('_')[1:])
             nameTempSet = set(nameTemp)
             for tmpName in names:
