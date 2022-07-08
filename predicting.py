@@ -163,10 +163,14 @@ def predict(paraDict):
             if verbose:
                 td.printC('Reading CSV-like data for model %d ...' %i,'b')
             featureGenerator = dataProcess.OtherFeatureGenerator()
+        elif subDataType.lower() == 'smiles':
+            if verbose:
+                td.printC('Enconding Smiles data for model %d ...' %i,'b')
+            featureGenerator = dataProcess.SmilesFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
         else:
             td.printC('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType, 'r')
         featureGenerators.append(featureGenerator)
-        assert subDataType.lower() in ['protein','dna','rna','other']
+        assert subDataType.lower() in ['protein','dna','rna','other','smiles']
     
     #if dataType is None:
     #    if verbose:
