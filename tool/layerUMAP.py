@@ -391,9 +391,9 @@ for i,subDataType in enumerate(dataTypeList):
             td.printC('Reading CSV-like data for model %d ...' %i,'b')
         featureGenerator = dataProcess.OtherFeatureGenerator()
     elif subDataType.lower() == 'smiles':
-	if verbose:
-	    td.printC('Enconding Smiles data for model %d ...' %i,'b')
-	featureGenerator = dataProcess.SmilesFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
+        if verbose:
+            td.printC('Enconding Smiles data for model %d ...' %i,'b')
+        featureGenerator = dataProcess.SmilesFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     else:
         td.printC('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType, 'r')
     featureGenerators.append(featureGenerator)
