@@ -786,7 +786,14 @@ def matAlignByName(mats,nameTemp,labels,names,checkNameLength = True):
             nameTempSet = set(nameTemp)
             for tmpName in names:
                 tmpSet = set(tmpName)
-                assert nameTempSet == tmpSet
+                #assert nameTempSet == tmpSet
+                if not nameTempSet == tmpSet:
+                    print('The names of the datasets are not consist!')
+                    print(nameTempSet - tmpSet)
+                    print(tmpSet - nameTempSet)
+                    print('Please check the names in the related files.')
+                    assert False
+
                 
 #    nameTemp = names[0]
     nameArgArgIndex = np.argsort(np.argsort(nameTemp))
