@@ -1,0 +1,25 @@
+Fast and efficient design of deep neural networks for predicting N7-methylguanosine sites using autoBioSeqpy
+===================================================
+
+Files
+===================================================
+data: This folder is the source of all datasets, including 4 datasets, details are described in the paper
+model: This folder is the source of all deep learnig models, including CNN, CNN_hybrid, DNN, DNN_hybrid, BiGRU, BiLSTM, CNN-BiGRU and CNN-BiLSTM.
+
+Usage
+===================================================
+
+Model training and prediction using positive.txt and negative.txt data sets
+#################################################################
+python running.py --dataType rna --dataEncodingType onehot --dataTrainFilePaths examples/m7G/data/positive.txt examples/m7G/data/negative.txt --dataTrainLabel 1 0 --dataSplitScale 0.9 --modelLoadFile examples/m7G/model/CNN.py --verbose 1 --outSaveFolderPath tmpOut --savePrediction 1 --saveFig 1 --batch_size 128 --epochs 20 --shuffleDataTrain 1 --spcLen 41 --modelSaveName tmpMod.json --weightSaveName tmpWeight.bin --noGPU 0 --paraSaveName parameters.txt optimizer optimizers.Adam(lr=0.001,amsgrad=False,decay=False)
+
+
+
+Model training and prediction using pos_feature.txt and neg_feature.txt data sets
+#################################################################
+python running.py --dataType other --dataEncodingType other --dataTrainFilePaths examples/m7G/data/pos_feature.txt examples/m7G/data/neg_feature.txt --dataTrainLabel 1 0 --dataSplitScale 0.9 --modelLoadFile examples/m7G/model/DNN.py --verbose 1 --outSaveFolderPath tmpOut --savePrediction 1 --saveFig 1 --batch_size 128 --epochs 20 --shuffleDataTrain 1 --spcLen 1416 --modelSaveName tmpMod.json --weightSaveName tmpWeight.bin --noGPU 0 --paraSaveName parameters.txt optimizer optimizers.Adam(lr=0.001,amsgrad=False,decay=False)
+
+
+Hybrid  models were used for training and prediction on all four data sets
+#############################################################
+python running.py --dataType rna other --dataEncodingType onehot other --dataTrainFilePaths examples/m7G/data/positive.txt  examples/m7G/data/negative.txt  examples/m7G/data/pos_feature.txt  examples/m7G/data/neg_feature.txt  --dataTrainLabel 1 0 1 0 --dataSplitScale 0.9 --modelLoadFile examples/m7G/model/CNN_hybrid.py examples/m7G/model/CNN+BiGRU_hybrid.py --verbose 1 --outSaveFolderPath tmpOut --savePrediction 1 --saveFig 1 --batch_size 128 --epochs 20 --shuffleDataTrain 1 --spcLen 41 1416 --dataTrainModelInd 0 0 1 1 --modelSaveName tmpMod.json --weightSaveName tmpWeight.bin --noGPU 0 --paraSaveName parameters.txt optimizer optimizers.Adam(lr=0.001,amsgrad=False,decay=False)
