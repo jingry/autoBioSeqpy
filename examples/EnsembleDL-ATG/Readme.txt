@@ -1,0 +1,21 @@
+EnsembleDL-ATG
+==================
+EnsembleDL-ATG: identifying autophagy proteins by integrating their sequence and evolutionary information using an ensemble deep learning framework
+==================
+
+Author
+==================
+ljs@swmu.edu.cn
+
+Overview
+==================
+EnsembleDL-ATG is an ensemble deep learning framework that aggregates multiple deep learning models to predict ATGs from protein sequence and evolutionary information. For sequence information, we designed five sequence-level deep learning models, including convolutional neural networks (CNNs), recurrent neural networks (RNNs) with bidirectional long short-term memory (BiLSTM) or bidirectional gated recurrent units (BiGRU), and the combination of the two networks (CNN-BiLSTM and CNN-BiGRU) to progressively extract higher-level abstract features from ATG primary sequences. On the other hand, in order to fully characterize the evolutionary history of a given ATG, we generated nine types of feature descriptors based on evolutionary information embedding in position-specific scoring matrix (PSSM), including AAC-PSSM, DP-PSSM, DPC-PSSM, Pse-PSSM, PSSM-AC, PSSM400, SVD_PSSM, Single_Average, and DFMCA_PSSM. We used several densely connected neural networks (DNNs) to   further extract more information from each PSSM-based feature vector. We first investigated various single deep learning models and performed a systematic grid search in the hyperparameter space of layer depth and neuron width to generate optimized, more informative prediction models. After that, all single models with the best performance were combined to establish the ensemble architecture framework. Here, we enumerated and tested all possible combinations of single deep learning models, which would involve 511 combinations. Instead of averaging results from individual models, as is traditionally done, we weighed the outcomes of each model to maximize the model’s respective strengths. We showed that this ensemble deep learning approach can accurately identify autophagy proteins and outperform the existing method on the same task.
+
+Usage
+==================
+Here, we developed a tool (generateCMD.py) to find the optimal ensemble deep learning framework. It is also very simple to use, just type "python examples\EnsembleDL-ATG\generateCMD.py" under the main autoBioSeqpy path. All results will be stored in the "out" folder under the main path. We found that the ensemble deep learning framework with the 'CNN+DFMCA_PSSM+DP-PSSM+PSSM-AC' feature group outperformed other combinations. Using this ensemble framework to predict the independent test set, users can use the following command:
+
+python running.py --dataType protein other other other --dataEncodingType dict other other other --dataTrainFilePaths examples/EnsembleDL-ATG/data/ATGtrpo393.txt examples/EnsembleDL-ATG/data/ATGtrne393.txt examples/EnsembleDL-ATG/data/po-DFMCA_PSSM.txt examples/EnsembleDL-ATG/data/ne-DFMCA_PSSM.txt examples/EnsembleDL-ATG/data/po-pssm_ac.txt examples/EnsembleDL-ATG/data/ne-pssm_ac.txt examples/EnsembleDL-ATG/data/po-DP_PSSM.txt examples/EnsembleDL-ATG/data/ne-DP_PSSM.txt --dataTrainLabel 1 0 1 0 1 0 1 0 --dataTestFilePaths examples/EnsembleDL-ATG/data/ATGtepo100.txt examples/EnsembleDL-ATG/data/ATGtene100.txt examples/EnsembleDL-ATG/data/pote-DFMCA_PSSM.txt examples/EnsembleDL-ATG/data/nete-DFMCA_PSSM.txt examples/EnsembleDL-ATG/data/pote-pssm_ac.txt examples/EnsembleDL-ATG/data/nete-pssm_ac.txt examples/EnsembleDL-ATG/data/pote-DP_PSSM.txt examples/EnsembleDL-ATG/data/nete-DP_PSSM.txt  --dataTestLabel 1 0 1 0 1 0 1 0  --modelLoadFile examples/EnsembleDL-ATG/model/CNN.py examples/EnsembleDL-ATG/model/DFMCA_PSSM.py examples/EnsembleDL-ATG/model/pssm_ac.py examples/EnsembleDL-ATG/model/DP_PSSM.py --verbose 1 --outSaveFolderPath tmpOut --savePrediction 1 --saveFig 1 --batch_size 128 --epochs 20 --shuffleDataTrain 1 --spcLen 2000 2000 2000 2000 --modelSaveName tmpMod.json --weightSaveName tmpWeight.bin --noGPU 0 --paraSaveName parameters.txt --optimizer optimizers.Adam(lr=0.001,amsgrad=False,decay=False) --dataTrainModelInd 0 0 1 1 2 2 3 3 --dataTestModelInd 0 0 1 1 2 2 3 3
+
+layerUMAP:
+python tool/layerUMAP.py --paraFile tmpOut/parameters.txt --outFigFolder tmpOut --metric cosine --n_neighbors 28 --min_dist 0.8 --interactive 1
