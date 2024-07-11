@@ -45,7 +45,9 @@ import dataProcess
 import analysisPlot
 import numpy as np
 from sklearn.metrics import accuracy_score,f1_score,roc_auc_score,recall_score,precision_score,confusion_matrix,matthews_corrcoef 
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v1 as tf 
+
 import keras
 from utils import TextDecorate, evalStrList, mergeDict
 td = TextDecorate()
@@ -178,6 +180,8 @@ else:
 
         sess =tf.compat.v1.Session(config=config)
     else:
+#        tf.enable_eager_execution(tf.ConfigProto(log_device_placement=True)) 
+
         config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
         sess = tf.Session(config=config)
     
@@ -212,10 +216,6 @@ for i,subDataType in enumerate(dataTypeList):
         if verbose:
             td.printC('Enconding RNA data for model %d ...' %i,'b')
         featureGenerator = dataProcess.RNAFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
-    elif subDataType.lower() == 'smiles':
-        if verbose:
-            td.printC('Enconding Smiles data for model %d ...' %i,'b')
-        featureGenerator = dataProcess.SmilesFeatureGenerator(dataEncodingType[i], useKMer=useKMerList[i], KMerNum=KMerNumList[i])
     elif subDataType.lower() == 'other':
         if verbose:
             td.printC('Reading CSV-like data for model %d ...' %i,'b')
@@ -223,7 +223,7 @@ for i,subDataType in enumerate(dataTypeList):
     else:
         td.printC('Unknow dataType %r, please use \'protein\', \'dna\' ,\'rna\' or \'other\'' %subDataType, 'r')
     featureGenerators.append(featureGenerator)
-    assert subDataType.lower() in ['protein','dna','rna','smiles','other']
+    assert subDataType.lower() in ['protein','dna','rna','other']
 
 #%% dataset generating
 if len(dataTestFilePaths) > 0:
@@ -267,6 +267,8 @@ if len(dataTestFilePaths) > 0:
         trainDataLoaders = trainDataLoadDict[modelIndex]
         trainDataSetCreator = dataProcess.DataSetCreator(trainDataLoaders)
         trainDataMat, trainLabelArr, nameList = trainDataSetCreator.getDataSet(toShuffle=False, seed=seed, withNameList=True)
+#        print(trainDataMat.shape)
+#        print(trainDataMat)
         trainDataMats.append(trainDataMat)
         trainLabelArrs.append(trainLabelArr)
         trainNameLists.append(nameList)
@@ -409,7 +411,7 @@ else:
     '''
     if verbose:
         td.printC('Training and test datasets generated.','g')
-    
+#print(trainLabelArrs)    
 #nameTemp = trainNameLists[0]
 if shuffleDataTrain:
     if verbose:
@@ -441,6 +443,7 @@ if shuffleDataTest:
 
 tmpTempLabel = trainLabelArrs[0]
 for tmpLabel in trainLabelArrs:
+#    print(np.array(tmpTempLabel) , np.array(tmpLabel))
     assert np.sum(np.array(tmpTempLabel) - np.array(tmpLabel)) == 0
 
 tmpTempLabel = testLabelArrs[0]
@@ -463,6 +466,7 @@ if verbose:
 #    print('Datasets generated')
     for i,trainDataMat in enumerate(trainDataMats):
         testDataMat = testDataMats[i]
+#        print(trainDataMat,testDataMat)
         td.printC('The %dth scales are:\n\ttraining: %d x %d\n\ttest: %d x %d' %(i,trainDataMat.shape[0],trainDataMat.shape[1],testDataMat.shape[0],testDataMat.shape[1]), 'b')    
     td.printC('Begin to prepare model...','b')
     
@@ -571,7 +575,7 @@ if len(modelLoadFile) > 1:
     try:
         if verbose:
             td.printC('Multiple models detected, trying to merge them directly... ','b')
-        model = moduleRead.modelMerge(models)
+        model = moduleRead.modelMerge(models, dataMats=trainDataMats,label=trainLabelArr)
         if verbose:
             td.printC('Merging finished. ','g')
     except:

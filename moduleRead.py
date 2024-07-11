@@ -169,15 +169,41 @@ def saveBuiltModel(model, savePath, weightPath = None):
         model.save_weights(weightPath)
     print("Saved model to disk")
 
-def modelMerge(models,activation='sigmoid'):
+def modelMerge(models, dataMats, label,activation='sigmoid'):
+    dataLabel = np.array(label)
     outputs = []
     inputs = []
     for model in models:
         outputs.append(model.output)
         inputs.append(model.input)
     concatenated = keras.layers.concatenate(outputs)
-    out = keras.layers.Dense(1,activation=activation)(concatenated)    
+    # out = keras.layers.Dense(1,activation=activation)(concatenated)    
+    # modelOut = keras.models.Model(inputs=inputs,outputs=out)
+    # return modelOut
+    concatenated = keras.layers.concatenate(outputs)
+    # outDim = 1
+    outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
+
+    # out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
+    
+    tmpSize = 128
+    tmpOut = keras.layers.Dense(tmpSize,activation=None)(concatenated)  
+    ln = keras.layers.LayerNormalization(axis=-1)
+    l1 = keras.layers.Dense(tmpSize/4,activation='relu')
+    l2 = keras.layers.Dense(tmpSize,activation=None)
+    dp = keras.layers.Dropout(0.15)
+    numIter = 8
+    for niter in range(numIter):
+        tmpArr = ln(tmpOut)
+        tmpArr = l1(tmpArr)
+        tmpArr = dp(tmpArr)
+        tmpOut = tmpOut + l2(tmpArr)
+    out = keras.layers.Dense(tmpSize,activation='relu')(tmpOut)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(outDim,activation='relu')(out)  
     modelOut = keras.models.Model(inputs=inputs,outputs=out)
+#    modelOut.summary()
     return modelOut
 
 def getPrimeFactor(intIn):
@@ -394,8 +420,24 @@ def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', re
     #    concatenate the neural network by dense    
     concatenated = keras.layers.concatenate(outputs)
     outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
-    out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
-
+    # out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
+    
+    tmpSize = 256
+    tmpOut = keras.layers.Dense(tmpSize,activation=None)(concatenated)  
+    ln = keras.layers.LayerNormalization(axis=-1)
+    l1 = keras.layers.Dense(tmpSize/4,activation='relu')
+    l2 = keras.layers.Dense(tmpSize,activation=None)
+    dp = keras.layers.Dropout(0.15)
+    numIter = 8
+    for niter in range(numIter):
+        tmpArr = ln(tmpOut)
+        tmpArr = l1(tmpArr)
+        tmpArr = dp(tmpArr)
+        tmpOut = tmpOut + l2(tmpArr)
+    out = keras.layers.Dense(tmpSize,activation='relu')(tmpOut)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(outDim,activation='relu')(out)  
     modelOut = keras.models.Model(inputs=inputs,outputs=out)
 #    modelOut.summary()
     return modelOut
