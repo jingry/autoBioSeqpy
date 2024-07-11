@@ -169,16 +169,42 @@ def saveBuiltModel(model, savePath, weightPath = None):
         model.save_weights(weightPath)
     print("Saved model to disk")
 
-def modelMerge(models,activation='sigmoid'):
-    outputs = []
-    inputs = []
-    for model in models:
-        outputs.append(model.output)
-        inputs.append(model.input)
-    concatenated = keras.layers.concatenate(outputs)
-    out = keras.layers.Dense(1,activation=activation)(concatenated)    
-    modelOut = keras.models.Model(inputs=inputs,outputs=out)
-    return modelOut
+# def modelMerge(models, dataMats, label,activation='sigmoid'):
+#     dataLabel = np.array(label)
+#     outputs = []
+#     inputs = []
+#     for model in models:
+#         outputs.append(model.output)
+#         inputs.append(model.input)
+#     concatenated = keras.layers.concatenate(outputs)
+#     # out = keras.layers.Dense(1,activation=activation)(concatenated)    
+#     # modelOut = keras.models.Model(inputs=inputs,outputs=out)
+#     # return modelOut
+#     concatenated = keras.layers.concatenate(outputs)
+#     # outDim = 1
+#     outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
+
+#     # out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
+    
+#     tmpSize = 128
+#     tmpOut = keras.layers.Dense(tmpSize,activation=None)(concatenated)  
+#     ln = keras.layers.LayerNormalization(axis=-1)
+#     l1 = keras.layers.Dense(tmpSize/4,activation='relu')
+#     l2 = keras.layers.Dense(tmpSize,activation=None)
+#     dp = keras.layers.Dropout(0.15)
+#     numIter = 8
+#     for niter in range(numIter):
+#         tmpArr = ln(tmpOut)
+#         tmpArr = l1(tmpArr)
+#         tmpArr = dp(tmpArr)
+#         tmpOut = tmpOut + l2(tmpArr)
+#     out = keras.layers.Dense(tmpSize,activation='relu')(tmpOut)  
+#     out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+#     out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+#     out = keras.layers.Dense(outDim,activation='relu')(out)  
+#     modelOut = keras.models.Model(inputs=inputs,outputs=out)
+# #    modelOut.summary()
+#     return modelOut
 
 def getPrimeFactor(intIn):
     '''
@@ -281,7 +307,21 @@ def reshapeSingleModelLayer(model,dataMat,reshapeSize=None,verbose=False,td=td):
     newModel.add(keras.layers.Reshape(tuple(tmpShape), input_shape=(dataFeaLength,)))
     newModel.add(model)
     return newModel
-    
+
+def modelMerge(models, dataMats, label,activation='sigmoid'):
+    dataLabel = np.array(label)
+    outputs = []
+    inputs = []
+    for model in models:
+        outputs.append(model.output)
+        inputs.append(model.input)
+    concatenated = keras.layers.concatenate(outputs)
+    # out = keras.layers.Dense(1,activation=activation)(concatenated)   
+    outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
+    out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
+    modelOut = keras.models.Model(inputs=inputs,outputs=out)
+    return modelOut
+
 def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', reshapeSizes=None, verbose=False, td=td, custom_objects=None):
     dataLabel = np.array(label)
     outputs = [None] * len(models)
@@ -396,6 +436,140 @@ def modelMergeByAddReshapLayer(models, dataMats, label, activation='sigmoid', re
     outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
     out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
 
+    modelOut = keras.models.Model(inputs=inputs,outputs=out)
+#    modelOut.summary()
+    return modelOut
+    
+def modelMergeByAddReshapLayer_old1(models, dataMats, label, activation='sigmoid', reshapeSizes=None, verbose=False, td=td, custom_objects=None):
+    dataLabel = np.array(label)
+    outputs = [None] * len(models)
+    inputs = [None] * len(models)
+    for i,model in enumerate(models):
+        if verbose:
+            td.printC('Preparing to merge model %d ...' %i, 'b')
+        if 'input_length' in dir(model.layers[0]):
+            if not model.layers[0].input_length == dataMats[i].shape[1]:
+                if verbose:
+                    td.printC('The input length will be changed to %d as the related matrix', 'g')
+                model.layers[0].input_length = dataMats[i].shape[1]
+        try:
+            modelInputShape = model.input.shape
+    #        print(modelInputShape)
+            shapeProdNum = None
+            for tmpVal in modelInputShape:
+                if 'value' in dir(tmpVal):
+                    tmpVal = tmpVal.value
+                if tmpVal is None:
+                    continue
+                else:
+                    if shapeProdNum is None:
+                        shapeProdNum = 1
+                    shapeProdNum *= tmpVal
+    #        assert (shapeProdNum is None) or (shapeProdNum == trainDataMats[0].shape[1])
+            if not shapeProdNum is None:
+    #            td.printC(str(shapeProdNum),'r')
+                assert shapeProdNum == dataMats[0].shape[1]        
+#            assert np.prod(model.layers[0].input_shape[1:]) == dataMats[i].shape[1]
+            outputs[i] = model.output
+            inputs[i] = model.input
+            if verbose:
+                td.printC('Model %d added successful' %i, 'g')
+        except:
+            if verbose:
+                td.printC('Model %d added failed, trying to add a reshape layer' %i, 'b')
+            if reshapeSizes is None:
+                reshapeSize = None
+            else:
+                reshapeSize = reshapeSizes[i]
+            newModel = reshapeSingleModelLayer(model,dataMats[i],reshapeSize=reshapeSize,verbose=verbose,td=td)
+            
+            
+#            newModel.summary()
+            outputs[i] = newModel.output
+            inputs[i] = newModel.input
+            models[i] = newModel
+            if verbose:
+                td.printC('Model %d with reshape layer added successful' %i, 'g')
+    #check the shape for outputs, the dimensions should be the same
+    outSizes = []
+    outShapes = []
+    for output in outputs:
+        outSizes.append(len(output.shape))
+        outShapes.append(output.shape)
+    outSizes = np.array(outSizes)
+    minSize = np.min(outSizes)
+    if np.sum(outSizes > minSize) > 0:
+        if verbose:
+            td.printC('The shapes of the outputs %s are not consistent, the minimal is %d, others will be reduced to the same dimension.' %(str(list(outShapes)), minSize), 'b')
+        for i, model in enumerate(models):
+            outShapeOld = model.output.shape
+            if len(outShapeOld) > minSize:
+                outShapeNew = [1] * (minSize - 1) #excluding none
+                for j,tmpVal in enumerate(outShapeOld[1:]):
+                    tmpPos = j
+                    while tmpPos >= (minSize - 1):
+                        tmpPos -= minSize - 1
+                    outShapeNew[tmpPos] *= int(tmpVal)
+#                model.add(keras.layers.Reshape(outShapeNew, input_shape=outShapeOld))
+                model.add(keras.layers.Reshape(outShapeNew))
+                #only update the output
+                outputs[i] = model.output
+                inputs[i] = model.input
+                if verbose:
+                    td.printC('New shape %s generated and will be added as the out layer of model %d' %(str(outShapeNew), i),'g')
+    #the name of the input should be different
+    tmpCount = 0
+    nameSet = set()
+    for i,model in enumerate(models):
+        changed = False
+        for subLayer in model.layers:
+            name = subLayer.name
+            if name in nameSet:
+                subLayer.name += '_%d' %tmpCount
+                tmpCount += 1
+                nameSet.add(subLayer.name)
+                changed = True
+            else:
+                nameSet.add(name)
+#        name = model.input.name
+#        if name in nameSet:
+#            model.input.name += ':%d' %tmpCount
+#            tmpCount += 1
+#            nameSet.add(model.input.name)
+#            changed = True
+        if changed:
+            newModel = model_from_json(model.to_json(), custom_objects=custom_objects)
+            for layer in newModel.layers:
+                try:
+                    layer.set_weights(model.get_layer(name=layer.name).get_weights())
+                except:
+                    if verbose:
+                        td.printC("Could not transfer weights for layer {}".format(layer.name),'p')
+            outputs[i] = newModel.output
+            inputs[i] = newModel.input
+            models[i] = newModel
+#        model.summary()
+    #    concatenate the neural network by dense    
+    concatenated = keras.layers.concatenate(outputs)
+    outDim = int(np.prod(dataLabel.shape) / dataMats[0].shape[0])
+    # out = keras.layers.Dense(outDim,activation=activation)(concatenated)  
+    
+    tmpSize = 256
+    tmpOut = keras.layers.Dense(tmpSize,activation=None)(concatenated)  
+    ln = keras.layers.LayerNormalization(axis=-1)
+    l1 = keras.layers.Dense(tmpSize/4,activation='relu')
+    l2 = keras.layers.Dense(tmpSize,activation=None)
+    dp = keras.layers.Dropout(0.15)
+    numIter = 8
+    for niter in range(numIter):
+        tmpArr = ln(tmpOut)
+        tmpArr = l1(tmpArr)
+        tmpArr = dp(tmpArr)
+        tmpOut = tmpOut + l2(tmpArr)
+    out = keras.layers.Dense(tmpSize,activation='relu')(tmpOut)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(tmpSize,activation='relu')(out)  
+    out = keras.layers.Dense(outDim,activation='relu')(out)  
     modelOut = keras.models.Model(inputs=inputs,outputs=out)
 #    modelOut.summary()
     return modelOut
