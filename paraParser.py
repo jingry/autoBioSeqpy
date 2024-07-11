@@ -200,6 +200,11 @@ options:
                                                 [0,1,0]
                             The change of the label could be useful for some kind of CNN with multilabel training.
     
+    --mergedActivate        string of layer name
+                            Default: None
+                            The layer name of activation if merging multiple model.
+
+    
     --seed                  int
                             Default: 1
                             The random seed of numpy.
@@ -247,6 +252,7 @@ def getDefaultParameters():
                 'loss' : 'binary_crossentropy',
                 'optimizer' : 'optimizers.Adam()',
                 'metrics' : ['acc'],
+                'mergedActivate' : None,
                 'modelSaveName' : None,
                 'weightSaveName' : None,
                 'noGPU' : False,

@@ -133,6 +133,8 @@ weightSaveName = paraDict['weightSaveName']
 noGPU = paraDict['noGPU']
 labelToMat = paraDict['labelToMat']
 
+mergedActivate = paraDict['mergedActivate']
+
 seed = paraDict['seed']
 if seed < 0:
     seed = np.random.randint(int(1e9))
@@ -575,13 +577,13 @@ if len(modelLoadFile) > 1:
     try:
         if verbose:
             td.printC('Multiple models detected, trying to merge them directly... ','b')
-        model = moduleRead.modelMerge(models, dataMats=trainDataMats,label=trainLabelArr)
+        model = moduleRead.modelMerge(models, dataMats=trainDataMats,label=trainLabelArr, activation=mergedActivate)
         if verbose:
             td.printC('Merging finished. ','g')
     except:
         if verbose:
             td.printC('Merging failed, trying adding reshape layer for the models... ','b')
-        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, reshapeSizes=reshapeSizes, verbose=verbose, td=td, custom_objects=custom_objects)
+        model = moduleRead.modelMergeByAddReshapLayer(models, dataMats=trainDataMats,label=trainLabelArr, activation=mergedActivate, reshapeSizes=reshapeSizes, verbose=verbose, td=td, custom_objects=custom_objects)
         if verbose:
             td.printC('Merging finished. ','g')
 else:
