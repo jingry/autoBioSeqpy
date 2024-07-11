@@ -202,7 +202,7 @@ options:
     
     --mergedActivate        string of layer name
                             Default: None
-                            The layer name of activation if merging multiple model.
+                            The layer name of activation if merging multiple model. Such as 'sigmoid' or 'softmax'
 
     
     --seed                  int
