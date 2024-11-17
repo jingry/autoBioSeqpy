@@ -53,6 +53,7 @@ class LossHistory(keras.callbacks.Callback):
 def plotROC(test,score, savePath = None, showFig = True, **kwargs):
     fpr,tpr,threshold = roc_curve(test, score)
     auc_roc = auc(fpr,tpr)
+    print("AUC: %f "%auc_roc)
     plt.figure()
     font = {'family': 'Times New Roman',
          'weight': 'normal',
