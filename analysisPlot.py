@@ -90,7 +90,7 @@ def plotPR(test,score,savePath = None, showFig = True, **kwargs):
          'size': 22,
          }
     plt.figure(figsize=(8,8))
-    plt.plot(precision, recall, color='darkred',lw=lw, label='P-R curve (area = %f)' %pr_auc)
+    plt.plot(recall, precision, color='darkred',lw=lw, label='P-R curve (area = %f)' %pr_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
