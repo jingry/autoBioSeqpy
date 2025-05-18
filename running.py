@@ -683,7 +683,7 @@ if not labelToMat:
     td.printC("Recall: %f "%recall_score(testLabelArr,prediction),'B')
     td.printC("Pre: %f "%precision_score(testLabelArr,prediction),'B')
     td.printC("MCC: %f "%matthews_corrcoef(testLabelArr,prediction),'B')
-#    td.printC("AUC: %f "%roc_auc_score(testLabelArr,prediction),'B')
+    td.printC("AUC: %f "%roc_auc_score(testLabelArr,predicted_Probability),'B')
 
 if savePrediction:
     tmpPredictSavePath = outSaveFolderPath + os.path.sep + 'predicts'
