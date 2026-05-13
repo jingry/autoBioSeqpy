@@ -15,7 +15,7 @@ UBPs‑MFCPred is a deep learning–based computational framework for the identi
 
 Data
 ==================
-Note: Please uncompresse the `data.7z` file at the first time of use. And ensure the location like:
+Note: Please uncompresse the `data.7z` file at the first time of utilization. And ensure the location like:
 ```
 UBPs‑MFCPred
 |----CV
