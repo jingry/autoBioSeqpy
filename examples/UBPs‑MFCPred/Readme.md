@@ -16,7 +16,7 @@ UBPs‑MFCPred is a deep learning–based computational framework for the identi
 Data
 ==================
 Note: Please uncompresse the `data.7z` file at the first time of use. And ensure the location like:
-
+```
 UBPs‑MFCPred
 |----CV
 	|----fold0
@@ -26,7 +26,7 @@ UBPs‑MFCPred
 	|----fold4
 |----train
 |----test
-
+```
 All datasets used in this study are included in the "UBPs‑MFCPred/data" folder. The folder is organized as follows:
 • Training data (train) – Contains files for model training constructed from the curated UBPs dataset:
     • 2 protein sequence files for training positive and negative samples (potr.txt, netr.txt), consisting of 450 UBPs and 450 non-UBPs
